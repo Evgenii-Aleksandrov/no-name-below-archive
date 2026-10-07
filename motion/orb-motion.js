@@ -1,288 +1,233 @@
-/* Native decorative motion. Routing and content remain owned by app.js. */
+/* Finite route decoration. Routing and content remain owned by app.js. */
 (function () {
   'use strict';
   const EVENT = 'nnb:orb-motion';
-  let state = null;
+  const ASSETS = 'engine/idle-game-engine/assets/textures/items/';
+  const ART = ['chaos_orb.png', 'orb_of_regret.png', 'orb_of_transmutation.png', 'orb_of_alchemy.png', 'divine_orb.png', 'exalted_orb.png', 'regal_orb.png'];
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
   const resolve = value => typeof value === 'string' ? document.querySelector(value) : value;
-  const ASSETS = 'engine/idle-game-engine/assets/textures/items/';
+  let state = null;
 
-  function preloadTexture(owner, src) {
-    if (owner.textures.has(src)) return owner.textures.get(src);
-    const loaded = new Promise(done => {
-      const image = new Image();
-      owner.textureImages.set(src, image);
-      image.decoding = 'async';
-      image.onload = async () => {
-        try { if (image.decode) await image.decode(); done(true); }
-        catch { done(false); }
-      };
-      image.onerror = () => done(false);
-      image.src = src;
+  // Shared choreography and poses also drive the seekable HyperFrames proof.
+  function layout(width, height) {
+    const base = clamp(width * .12, 58, 150);
+    return Array.from({ length: 14 }, (_, i) => {
+      const depth = [ .66, 1, .82, 1.2 ][i % 4];
+      const size = Math.round(base * depth);
+      return { size, y: height * (.09 + (i * 5 % 14) / 14 * .83) - size / 2,
+        drift: (i % 2 ? -1 : 1) * height * .055, delay: (i * 3 % 14) / 13 * .18,
+        opacity: depth < .8 ? .64 : .94, layer: Math.round(depth * 10) };
     });
-    owner.textures.set(src, loaded);
-    return loaded;
   }
 
-  function selectTexture(owner, id) {
-    const sequence = ++owner.textureSequence;
-    const requested = Object.hasOwn(owner.routeTextures, id)
-      ? owner.routeTextures[id] : owner.defaultSrc;
-    const reportMissing = src => {
-      if (owner.textureErrors.has(src)) return;
-      owner.textureErrors.add(src);
-      emit('asset-error', { src, fallback: owner.currentSrc || owner.defaultSrc });
+  function frames(travel = innerWidth, size = 80, direction = 1, drift = 0, opacity = .94) {
+    const start = direction > 0 ? -size * 2 : travel + size;
+    const end = direction > 0 ? travel + size : -size * 2;
+    const pose = (p, scale, alpha) => ({
+      transform: `translate3d(${start + (end - start) * p}px,${Math.sin(p * Math.PI) * drift}px,0) rotate(${direction * (-.2 + p * .8)}rad) scale(${scale})`,
+      opacity: alpha, offset: p
+    });
+    return {
+      orb: [pose(0, .86, 0), pose(.14, .96, opacity), pose(.48, 1.04, opacity), pose(.82, 1, opacity), pose(1, .9, 0)],
+      veil: [{ opacity: 0, offset: 0 }, { opacity: .76, offset: .24 }, { opacity: .46, offset: .56 }, { opacity: 0, offset: 1 }]
     };
-    preloadTexture(owner, requested).then(async loaded => {
-      if (state !== owner || sequence !== owner.textureSequence) return;
-      let src = requested;
-      if (!loaded) {
-        reportMissing(src);
-        // Keep the last decoded artwork, even while a replacement is loading.
-        if (owner.currentSrc) return;
-        src = owner.defaultSrc;
-        if (!await preloadTexture(owner, src)) {
-          if (state === owner && sequence === owner.textureSequence) reportMissing(src);
-          return;
-        }
-      }
-      if (state !== owner || sequence !== owner.textureSequence) return;
-      // Install the already decoded image; assigning src again can refetch when
-      // browser caching is disabled. The single animated token never changes.
-      owner.image = owner.textureImages.get(src);
-      owner.image.alt = '';
-      owner.image.width = owner.image.height = owner.size;
-      owner.image.draggable = false;
-      owner.token.replaceChildren(owner.image);
-      owner.currentSrc = src;
-      owner.token.hidden = false;
-      emit('texture-change', { src });
+  }
+
+  function revealFrames(rect, width, height, direction = 1, starts = []) {
+    const flights = layout(width, height).map((flight, i) => {
+      const rows = frames(width, flight.size, direction, flight.drift, flight.opacity).orb;
+      if (starts[i]) rows[0] = starts[i];
+      return { ...flight, delay: starts.length ? 0 : flight.delay,
+        rows: rows.map(row => ({ offset: row.offset, matrix: new DOMMatrixReadOnly(row.transform) })) };
+    });
+    // Keep the same piecewise-linear translation clock as the actual orb poses.
+    const times = [...new Set([0, 1, ...flights.flatMap(flight => flight.rows.map(row =>
+      Math.min(1, flight.delay + row.offset * .82)))])].sort((a, b) => a - b);
+    return times.map(time => {
+      const bands = flights.map(flight => {
+        const phase = clamp((time - flight.delay) / .82, 0, 1);
+        const next = flight.rows.findIndex(row => row.offset >= phase);
+        const b = flight.rows[Math.max(0, next)], a = flight.rows[Math.max(0, next - 1)];
+        const p = b.offset > a.offset ? (phase - a.offset) / (b.offset - a.offset) : 0;
+        const x = a.matrix.m41 + (b.matrix.m41 - a.matrix.m41) * p;
+        const y = a.matrix.m42 + (b.matrix.m42 - a.matrix.m42) * p;
+        // Reveal behind the entire rotating sprite, rather than its leading edge.
+        const tail = x + (direction > 0 ? -flight.size * .25 : flight.size * 1.25);
+        return { y: flight.y + flight.size / 2 + y,
+          x: clamp(tail - rect.left, 0, rect.width) };
+      }).sort((a, b) => a.y - b.y);
+      const edge = direction > 0 ? 0 : rect.width;
+      const points = [[edge, 0]];
+      bands.forEach((band, i) => {
+        const top = i ? clamp((bands[i - 1].y + band.y) / 2 - rect.top, 0, rect.height) : 0;
+        const bottom = i + 1 < bands.length ? clamp((band.y + bands[i + 1].y) / 2 - rect.top, 0, rect.height) : rect.height;
+        points.push([band.x, top], [band.x, bottom]);
+      });
+      points.push([edge, rect.height]);
+      return { clipPath: `polygon(${points.map(([x, y]) => `${x.toFixed(2)}px ${y.toFixed(2)}px`).join(',')})`, offset: time };
     });
   }
 
   function emit(type, extra = {}) {
-    window.dispatchEvent(new CustomEvent(EVENT, {
-      detail: { type, route: state?.route ?? null, reducedMotion: !!state?.reduced(), ...extra }
-    }));
+    window.dispatchEvent(new CustomEvent(EVENT, { detail: {
+      type, route: state?.route ?? null, reducedMotion: !!state?.reduced(), ...extra
+    } }));
   }
 
-  function cancel(reason) {
-    if (!state?.animation) return;
-    const animation = state.animation;
-    state.animation = null;
-    animation.onfinish = null;
-    animation.cancel();
-    emit('route-cancel', { reason });
+  function preload(owner, src) {
+    if (owner.textures.has(src)) return;
+    const image = new Image();
+    const entry = { image, loaded: false };
+    owner.textures.set(src, entry);
+    image.decoding = 'async';
+    image.onload = async () => {
+      try { if (image.decode) await image.decode(); }
+      catch { return; }
+      if (state !== owner) return;
+      entry.loaded = true;
+      emit('texture-change', { src });
+    };
+    image.onerror = () => {
+      if (state === owner) emit('asset-error', { src, fallback: owner.defaultSrc });
+    };
+    image.src = src;
   }
 
-  function progress() {
-    const scrolling = document.scrollingElement || document.documentElement;
-    const range = scrolling.scrollHeight - scrolling.clientHeight;
-    return range > 0 ? clamp(scrolling.scrollTop / range, 0, 1) : 0;
-  }
-
-  function updateScroll() {
+  function cancel(reason, keepOverlay = false) {
     if (!state) return;
-    state.frame = 0;
-    if (state.mode !== 'scroll') return;
-    state.scrollRoot.dataset.nativeScroll = String(state.nativeScroll && !state.reduced());
-    if (state.section) {
-      const scrolling = document.scrollingElement || document.documentElement;
-      const p = clamp((scrolling.scrollTop - state.scrollAnchor) / state.scrollRange, 0, 1);
-      const direction = state.scrollBase > state.routeTravel / 2 ? -1 : 1;
-      const x = state.reduced() ? state.routeTravel : state.scrollBase + direction * p * state.scrollTravel;
-      const rotation = state.reduced() ? 0 : state.scrollRotation + (x - state.scrollBase) / (state.size / 2);
-      state.token.style.transform = `translateX(${x}px) rotate(${rotation}rad)`;
-      return;
+    const active = state.animations.length > 0;
+    for (const animation of state.animations) {
+      animation.onfinish = null;
+      animation.cancel();
     }
-    const y = state.reduced() ? 0 : progress() * state.scrollTravel;
-    state.token.style.transform = state.nativeScroll && !state.reduced()
-      ? '' : `translateY(${y}px) rotate(${y / (state.size / 2)}rad)`;
-  }
-
-  function scheduleScroll() {
-    if (!state || state.frame || document.hidden) return;
-    state.frame = requestAnimationFrame(updateScroll);
-  }
-
-  function showScroll() {
-    if (!state) return;
-    state.mode = 'scroll';
-    state.token.classList.add('nnb-orb-token-scroll');
-    state.token.style.opacity = '1';
-    state.token.style.willChange = '';
-    if (state.section) {
-      state.scrollAnchor = (document.scrollingElement || document.documentElement).scrollTop;
-      state.scrollBase = state.settledX;
-      state.scrollRotation = state.settledRotation;
+    state.animations = [];
+    if (!keepOverlay) {
+      state.overlay.hidden = true;
+      state.overlay.replaceChildren(state.veil);
+      state.tokens = [];
     }
-    state.scrollRoot.append(state.token);
-    updateScroll();
+    if (active && reason !== 'complete') emit('route-cancel', { reason });
   }
 
-  function motionChanged() {
-    cancel('motion-preference');
-    showScroll();
+  function settle(reason) {
+    if (!state?.animations.length) return;
+    cancel(reason);
+    emit('route-settle', { instant: true, reason });
   }
 
-  function visibilityChanged() {
-    if (document.hidden) {
-      cancel('page-hidden');
-      if (state?.frame) cancelAnimationFrame(state.frame);
-      if (state) state.frame = 0;
-      showScroll();
-    } else scheduleScroll();
-  }
+  function motionChanged() { if (state?.reduced()) settle('motion-preference'); }
+  function visibilityChanged() { if (document.hidden) settle('page-hidden'); }
+  function resized() { settle('resize'); }
 
   function destroy() {
     if (!state) return;
     cancel('destroy');
-    if (state.frame) cancelAnimationFrame(state.frame);
-    window.removeEventListener('scroll', scheduleScroll);
-    window.removeEventListener('resize', scheduleScroll);
+    window.removeEventListener('resize', resized);
     document.removeEventListener('visibilitychange', visibilityChanged);
     state.media.removeEventListener('change', motionChanged);
-    state.observer?.disconnect();
-    state.routeRoot.remove();
-    state.scrollRoot.remove();
+    state.overlay.remove();
+    for (const { image } of state.textures.values()) image.onload = image.onerror = null;
     emit('destroy');
     state = null;
   }
 
   function init(options = {}) {
-    const routeHost = resolve(options.routeHost);
-    const scrollHost = resolve(options.scrollHost);
-    if (!(routeHost instanceof HTMLElement) || !(scrollHost instanceof HTMLElement)) {
-      throw new TypeError('NNBOrbMotion.init needs routeHost and scrollHost elements.');
+    if (!(resolve(options.routeHost) instanceof HTMLElement)) {
+      throw new TypeError('NNBOrbMotion.init needs a routeHost element.');
     }
     destroy();
-    const section = options.presentation === 'section';
-    const size = section ? clamp(Number(options.size) || 88, 64, 88) : clamp(Number(options.size) || 36, 32, 40);
-    const routeTravel = clamp(Number(options.routeTravel) || 96, 48, 160);
-    const scrollTravel = section ? clamp(Number(options.scrollTravel) || 64, 24, 64) : clamp(Number(options.scrollTravel) || 160, 64, 240);
-    const routeRoot = document.createElement('span');
-    const scrollRoot = document.createElement('span');
-    routeRoot.className = 'nnb-orb-rail nnb-orb-route';
-    scrollRoot.className = 'nnb-orb-rail nnb-orb-scroll';
-    for (const root of [routeRoot, scrollRoot]) {
-      if (section) root.classList.add('nnb-orb-section');
-      root.setAttribute('aria-hidden', 'true');
-      root.style.setProperty('--nnb-orb-size', size + 'px');
-      root.style.setProperty('--nnb-orb-crest-span', routeTravel + 'px');
-    }
-    routeRoot.style.setProperty('--nnb-orb-travel', routeTravel + 'px');
-    scrollRoot.style.setProperty('--nnb-orb-travel', scrollTravel + 'px');
-    scrollRoot.style.setProperty('--nnb-orb-turn', scrollTravel / (size / 2) + 'rad');
-    const token = document.createElement('span');
-    token.className = 'nnb-orb-token';
-    const image = document.createElement('img');
-    const defaultSrc = options.orbSrc || ASSETS + 'chaos_orb.png';
-    image.alt = '';
-    image.width = image.height = size;
-    image.draggable = false;
-    token.hidden = true;
-    token.append(image);
+    const overlay = document.createElement('div');
+    overlay.className = 'nnb-orb-overlay';
+    overlay.setAttribute('aria-hidden', 'true');
+    overlay.inert = true;
+    overlay.hidden = true;
+    const veil = document.createElement('span');
+    veil.className = 'nnb-orb-veil';
+    overlay.append(veil);
+    // Body ownership avoids transformed headings clipping the viewport overlay.
+    document.body.append(overlay);
     const media = matchMedia('(prefers-reduced-motion: reduce)');
-    const nativeScroll = !section && options.scrollTimeline !== false && CSS.supports('animation-timeline: scroll(root block)');
-    state = {
-      routeRoot, scrollRoot, token, image, media, size, routeTravel, scrollTravel,
-      duration: section ? clamp(Number(options.duration) || 680, 560, 720) : clamp(Number(options.duration) || 560, 480, 620),
-      section, scrollRange: clamp(Number(options.scrollRange) || 320, 240, 480),
-      settledX: 0, settledRotation: 0, scrollAnchor: 0, scrollBase: 0, scrollRotation: 0,
+    const defaultSrc = options.orbSrc || ASSETS + ART[0];
+    state = { overlay, veil, media, defaultSrc, contentHost: options.contentHost,
+      route: options.initialRoute ?? null, duration: clamp(Number(options.duration) || 940, 750, 1000),
+      order: options.routeOrder || [], routeTextures: options.routeTextures || {},
       reduced: () => options.reducedMotion === true || media.matches,
-      nativeScroll, mode: 'scroll', animation: null, frame: 0,
-      defaultSrc, currentSrc: null, textureSequence: 0, textures: new Map(), textureImages: new Map(), textureErrors: new Set(),
-      routeTextures: {
-        items: defaultSrc, armory: defaultSrc,
-        planner: ASSETS + 'orb_of_regret.png', talents: ASSETS + 'orb_of_regret.png',
-        crafting: ASSETS + 'orb_of_transmutation.png',
-        ...Object.fromEntries(Object.entries(options.routeTextures || {}).filter(([, src]) => typeof src === 'string' && src))
-      },
-      route: options.initialRoute ?? null,
-      order: options.routeOrder || ['items', 'classes', 'skills', 'talents', 'planner', 'enemies', 'dungeons', 'affixes', 'mechanics', 'crafting', 'orbs', 'showcase']
-    };
-    scrollRoot.dataset.nativeScroll = String(nativeScroll);
-    routeHost.append(routeRoot);
-    scrollHost.append(scrollRoot);
-    media.addEventListener('change', motionChanged);
-    window.addEventListener('resize', scheduleScroll, { passive: true });
-    document.addEventListener('visibilitychange', visibilityChanged);
-    if (!nativeScroll) window.addEventListener('scroll', scheduleScroll, { passive: true });
-    if ('ResizeObserver' in window) {
-      state.observer = new ResizeObserver(scheduleScroll);
-      state.observer.observe(document.body);
+      textures: new Map(), tokens: [], animations: [] };
+    for (const src of new Set([defaultSrc, ...ART.map(name => ASSETS + name), ...Object.values(state.routeTextures)])) {
+      if (typeof src === 'string' && src) preload(state, src);
     }
-    showScroll();
-    for (const src of new Set([defaultSrc, ...Object.values(state.routeTextures)])) preloadTexture(state, src);
-    selectTexture(state, state.route);
-    emit('ready', { nativeScroll });
+    media.addEventListener('change', motionChanged);
+    window.addEventListener('resize', resized, { passive: true });
+    document.addEventListener('visibilitychange', visibilityChanged);
+    emit('ready', { nativeScroll: false });
     return window.NNBOrbMotion;
   }
 
   function route(id, options = {}) {
     if (!state || id === state.route) return false;
-    const previous = state.route;
-    const a = state.order.indexOf(previous), b = state.order.indexOf(id);
+    const owner = state, previous = owner.route;
+    const a = owner.order.indexOf(previous), b = owner.order.indexOf(id);
     const direction = options.direction === -1 || (options.direction !== 1 && a >= 0 && b >= 0 && b < a) ? -1 : 1;
-    let x = direction > 0 ? 0 : state.routeTravel;
-    let rotation = 0;
-    const interrupted = !!state.animation;
-    if (interrupted) {
-      // Preserve the rendered pose before cancelling a rapid route change.
-      const matrix = new DOMMatrixReadOnly(getComputedStyle(state.token).transform);
-      x = matrix.m41;
-      rotation = Math.atan2(matrix.m12, matrix.m11);
-      cancel('superseded');
-    }
-    if (state.section && !interrupted && !state.token.hidden) {
-      const matrix = new DOMMatrixReadOnly(getComputedStyle(state.token).transform);
-      x = matrix.m41;
-      rotation = Math.atan2(matrix.m12, matrix.m11);
-    }
-    state.route = id;
-    selectTexture(state, id);
-    emit('route-start', { previous });
-    if (state.reduced() || document.hidden || !state.token.animate || state.token.hidden) {
-      showScroll();
+    // Read every visible pose before supersession; the same sprites continue
+    // their flight, rather than flashing off and restarting at the screen edge.
+    const poses = owner.tokens.map(token => {
+      const css = getComputedStyle(token);
+      return { transform: css.transform, opacity: css.opacity, offset: 0 };
+    });
+    const veilOpacity = getComputedStyle(owner.veil).opacity;
+    cancel('superseded', poses.length > 0);
+    owner.route = id;
+    emit('route-start', { previous, transition: 'orb-swarm' });
+    const loaded = [...owner.textures].filter(([, entry]) => entry.loaded).map(([src]) => src);
+    if (owner.reduced() || document.hidden || !owner.overlay.animate || !loaded.length) {
+      cancel('instant');
       emit('route-settle', { instant: true });
       return true;
     }
-    state.mode = 'route';
-    state.token.classList.remove('nnb-orb-token-scroll');
-    state.token.style.willChange = 'transform, opacity';
-    state.routeRoot.append(state.token);
-    const end = state.section && options.direction === undefined
-      ? (x > state.routeTravel / 2 ? 0 : state.routeTravel) : (direction > 0 ? state.routeTravel : 0);
-    const endRotation = rotation + (end - x) / (state.size / 2);
-    const from = `translateX(${x}px) rotate(${rotation}rad)`;
-    const to = `translateX(${end}px) rotate(${endRotation}rad)`;
-    state.token.style.transform = from;
-    const overshoot = end + (end >= x ? 4 : -4);
-    const overRotation = rotation + (overshoot - x) / (state.size / 2);
-    const frames = state.section ? [
-      { transform: from, opacity: 1, offset: 0, easing: 'cubic-bezier(.22,1,.36,1)' },
-      { transform: `translateX(${overshoot}px) rotate(${overRotation}rad)`, opacity: 1, offset: .82, easing: 'cubic-bezier(.2,.8,.2,1)' },
-      { transform: to, opacity: 1, offset: 1 }
-    ] : [
-      { transform: from, opacity: interrupted ? 1 : 0 },
-      { opacity: 1, offset: .15 },
-      { opacity: 1, offset: .85 },
-      { transform: to, opacity: 0 }
-    ];
-    const animation = state.token.animate(frames, {
-      duration: state.duration, easing: state.section ? 'linear' : 'cubic-bezier(.22,1,.36,1)', fill: 'forwards'
+    const requested = owner.routeTextures[id] || owner.defaultSrc;
+    const palette = [...new Set([requested, ...loaded])].filter(src => owner.textures.get(src)?.loaded);
+    const choreography = layout(innerWidth, innerHeight);
+    owner.overlay.hidden = false;
+    choreography.forEach((flight, i) => {
+      let token = owner.tokens[i];
+      if (!token) {
+        token = document.createElement('span');
+        token.className = 'nnb-orb-token';
+        const image = owner.textures.get(palette[i % palette.length]).image.cloneNode();
+        image.alt = '';
+        image.draggable = false;
+        image.width = image.height = flight.size;
+        image.onerror = () => { token.hidden = true; };
+        token.append(image);
+        owner.tokens.push(token);
+        owner.overlay.append(token);
+      }
+      Object.assign(token.style, { top: flight.y + 'px', width: flight.size + 'px', height: flight.size + 'px', zIndex: flight.layer });
+      token.style.setProperty('--nnb-orb-direction', direction);
+      const rows = frames(innerWidth, flight.size, direction, flight.drift, flight.opacity).orb;
+      if (poses[i]) rows[0] = poses[i];
+      owner.animations.push(token.animate(rows, {
+        duration: owner.duration * .82, delay: poses.length ? 0 : owner.duration * flight.delay,
+        easing: 'linear', fill: 'both'
+      }));
     });
-    state.animation = animation;
-    animation.onfinish = () => {
-      if (!state || state.animation !== animation) return;
-      state.animation = null;
-      if (state.section) { state.settledX = end; state.settledRotation = endRotation; }
-      animation.cancel();
-      showScroll();
-      emit('route-settle', { instant: false });
+    const shared = frames();
+    if (poses.length) shared.veil[0].opacity = Number(veilOpacity);
+    const clock = owner.veil.animate(shared.veil, { duration: owner.duration, fill: 'both' });
+    owner.animations.push(clock);
+    const host = typeof owner.contentHost === 'function' ? owner.contentHost(id) : owner.contentHost;
+    const content = resolve(host);
+    if (content?.animate) {
+      const reveal = revealFrames(content.getBoundingClientRect(), innerWidth, innerHeight, direction, poses);
+      owner.animations.push(content.animate(reveal, { duration: owner.duration, easing: 'linear', fill: 'both' }));
+    }
+    clock.onfinish = () => {
+      if (state !== owner || !owner.animations.includes(clock)) return;
+      cancel('complete');
+      emit('route-settle', { instant: false, transition: 'orb-swarm' });
     };
     return true;
   }
 
-  window.NNBOrbMotion = Object.freeze({ init, route, destroy });
+  window.NNBOrbMotion = Object.freeze({ init, route, destroy, frames, layout, revealFrames });
 }());
