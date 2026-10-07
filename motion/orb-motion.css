@@ -1,0 +1,12 @@
+.nnb-orb-rail{display:block;position:relative;pointer-events:none;user-select:none;contain:layout paint;--nnb-orb-size:36px}
+.nnb-orb-route{width:calc(var(--nnb-orb-travel) + var(--nnb-orb-size));height:var(--nnb-orb-size)}
+.nnb-orb-scroll{width:var(--nnb-orb-size);height:calc(var(--nnb-orb-travel) + var(--nnb-orb-size))}
+.nnb-orb-rail::before{content:"";position:absolute;background:#d2b47a45;pointer-events:none}
+.nnb-orb-route::before{height:1px;left:calc(var(--nnb-orb-size)/2);right:calc(var(--nnb-orb-size)/2);top:calc(var(--nnb-orb-size)/2)}
+.nnb-orb-scroll::before{width:1px;top:calc(var(--nnb-orb-size)/2);bottom:calc(var(--nnb-orb-size)/2);left:calc(var(--nnb-orb-size)/2)}
+.nnb-orb-token{position:absolute;left:0;top:0;width:var(--nnb-orb-size);height:var(--nnb-orb-size);pointer-events:none;transform-origin:center}
+.nnb-orb-token img{display:block;width:100%;height:100%;object-fit:contain;pointer-events:none}
+.nnb-orb-token[hidden]{display:none}
+@keyframes nnb-orb-scroll{from{transform:translateY(0) rotate(0rad)}to{transform:translateY(var(--nnb-orb-travel)) rotate(var(--nnb-orb-turn))}}
+.nnb-orb-scroll[data-native-scroll="true"] .nnb-orb-token-scroll{animation:nnb-orb-scroll linear both;animation-timeline:scroll(root block)}
+@media(prefers-reduced-motion:reduce){.nnb-orb-token{animation:none!important;will-change:auto!important}}

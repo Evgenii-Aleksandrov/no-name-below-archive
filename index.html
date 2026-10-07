@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark">
+  <title>No Name Below — The Descent Archive</title>
+  <link rel="icon" href="engine/idle-game-engine/assets/branding/app_icon.png">
+  <link rel="stylesheet" href="style.css"><link rel="stylesheet" href="motion/orb-motion.css">
+  <script src="planner.js" defer></script><script src="motion/orb-motion.js" defer></script><script src="app.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#content">Skip to archive</a>
+<header class="masthead">
+  <a class="brand" href="#items"><span>NO NAME BELOW<small>THE DESCENT ARCHIVE</small></span></a>
+  <button id="nav-toggle" class="nav-toggle" aria-expanded="false" aria-controls="main-nav">Browse <span aria-hidden="true">☰</span></button>
+  <nav id="main-nav" aria-label="View"><a href="#items">Armory</a><a href="#planner">Talent Atlas</a><a href="#enemies">Bestiary</a><a href="#crafting">Crafting</a><a href="#mechanics">Mechanics</a></nav>
+  <form id="global-search" class="global-search" role="search"><label class="sr-only" for="global-query">Search every collection</label><input id="global-query" type="search" placeholder="Search the archive…" autocomplete="off"><button aria-label="Search every collection">⌕</button></form>
+  <div id="orb-route-host" aria-hidden="true"></div>
+</header>
+<div id="orb-scroll-host" aria-hidden="true"></div>
+<div id="library">
+  <section class="intro">
+    <div class="intro-copy"><p class="eyebrow">A FIELD GUIDE TO NO NAME BELOW</p><h1>Know the depths.<br>Choose your path.</h1><p class="lede">Explore the creatures, equipment and arts of the descent. Trace your own connected build through the Talent Atlas.</p><div class="hero-actions"><a href="#planner" class="primary-link">Enter the Talent Atlas <span aria-hidden="true">↗</span></a><a href="#classes" class="text-link">Meet the four classes <span aria-hidden="true">→</span></a></div><div class="archive-stamp"><span id="total">…</span> <span class="stamp-rule"></span> <span>Development edition</span></div></div>
+    <div class="hero-art"><img src="engine/idle-game-engine/assets/textures/ui/logo_no_name_below.png" alt="No Name Below" width="760" height="570"><p>THE DESCENT ARCHIVE</p></div>
+  </section>
+  <div class="workspace">
+    <aside class="collection-rail"><p class="eyebrow">EXPLORE THE ARCHIVE</p><nav id="categories" aria-label="Collections"></nav><div class="aside-note"><span class="edition-dot"></span> Development reference<p id="snapshot-label">Sourced from the game's current content.</p><a href="#mechanics">How to read the archive →</a></div></aside>
+    <main id="content" tabindex="-1">
+      <label class="mobile-collection">Collection <select id="collection-select" aria-label="Choose collection"></select></label>
+      <section id="bestiary-feature" hidden aria-labelledby="bestiary-feature-title"></section><div class="section-title"><div><p class="eyebrow" id="section-kicker">THE ARMORY</p><h2 id="section-title">Equipment & items</h2><p id="section-description" class="section-description"></p></div><div id="section-art" aria-hidden="true"></div></div>
+      <div class="collection-tools" id="collection-tools"><form class="filters" id="filters" role="search"><label class="search-label"><span class="sr-only">Search this collection</span><input id="search" type="search" placeholder="Search names, effects, descriptions…" autocomplete="off"></label><label><span class="sr-only">Tier</span><select id="tier"><option value="">All tiers</option></select></label><label><span class="sr-only">Type</span><select id="kind"><option value="">All types</option></select></label><button type="reset">Reset</button></form><span id="result-count" role="status" aria-live="polite"></span></div>
+      <div id="chapter" hidden></div><div id="cards" class="cards"></div><div class="pagination"><button id="more" hidden>Show more</button></div>
+    </main>
+  </div>
+</div>
+<section id="showcase" hidden>
+  <div class="gallery-heading"><p class="eyebrow">NO NAME BELOW / THE ARMORY</p><h1>Eight tiers.<br>One vast armory.</h1><p>Equipment, from the first descent to tier VIII.</p><div class="gallery-controls"><label>Equipment <select id="gallery-kind"><option value="">All equipment</option></select></label><button id="scroll-toggle">Start slow scroll</button><button id="clean-toggle">Clean presentation</button><a href="#items">Back to archive</a></div><small id="gallery-help">Escape stops motion and restores controls. Wheel or touch stops scrolling.</small></div><div id="tier-gallery"></div><footer>NO NAME BELOW <span>THE EQUIPMENT COLLECTION</span></footer>
+</section>
+<dialog id="detail" aria-labelledby="detail-title"><button id="close-detail" aria-label="Close details">×</button><div id="detail-body"></div></dialog>
+<section id="planner" hidden aria-labelledby="planner-title">
+  <div class="planner-heading"><div><p class="eyebrow">BUILD YOUR PATH</p><h1 id="planner-title">The Talent Atlas</h1><p>Every choice begins with a connection. Inspect, allocate and share your path.</p></div><a href="#talents" class="text-link">Browse the talent reference →</a></div>
+  <div class="planner-toolbar"><label>Class <select id="plan-class"><option value="warrior_center">Warrior</option><option value="mage_center">Mage</option><option value="rogue_center">Rogue</option><option value="cleric_center">Cleric</option></select></label><button id="plan-fit">Full atlas</button><button id="plan-focus">Class origin</button><button id="plan-zoom-in" aria-label="Zoom in">+</button><button id="plan-zoom-out" aria-label="Zoom out">−</button><button id="plan-undo">Undo</button><button id="plan-reset">Reset</button><button id="plan-share" class="primary-link">Copy build link</button><span id="plan-count" role="status"></span></div>
+  <div class="planner-layout"><div id="atlas-stage"><p id="atlas-status" role="status"></p><canvas id="atlas" aria-label="Talent atlas. Use the accessible talent selector beside the map to inspect and allocate nodes."></canvas><p id="atlas-hint" class="atlas-hint">Drag to explore · Scroll to zoom · Select to inspect</p></div><aside class="planner-panel"><div class="planner-picker"><label for="plan-search">Find a talent</label><input id="plan-search" type="search" placeholder="Name or effect…"><label class="sr-only" for="plan-view">Talent list</label><select id="plan-view"><option value="available">Available paths</option><option value="build">Your build</option><option value="all">All talents</option></select><label for="plan-node" class="sr-only">Choose talent</label><select id="plan-node" size="4"></select></div><div id="plan-selection"></div><p id="plan-message" role="status" aria-live="polite"></p><p id="plan-import-message" role="status" aria-live="polite"></p><details class="build-summary" open><summary>Your build</summary><div id="plan-summary"></div></details></aside></div>
+</section>
+<footer class="library-footer"><div><strong>THE DESCENT ARCHIVE</strong><p>No Name Below · Development reference</p><a href="#showcase">Explore the equipment gallery →</a></div><img src="engine/idle-game-engine/assets/textures/ui/logo_elsegate_studio_color.png" alt="ElseGate Studio" width="600" height="227"><p class="footer-note">Game art. Connected records.<br>Your path through the depths.</p></footer>
+<div id="error" role="alert" hidden></div>
+</body>
+</html>

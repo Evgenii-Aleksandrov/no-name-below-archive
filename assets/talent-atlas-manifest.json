@@ -1,0 +1,34 @@
+{
+  "source": "engine/idle-game-engine/assets/talent_tree/talent_tree_4096.png",
+  "source_sha256": "599891d85cd9d017154a60ad9674ee10ce4ac2ec7f111dafb06f28a28a16aa6e",
+  "coordinates_sha256": "1ff03d69817c37e2a04868842733ad28ba3731a9e3d191c51716e1990aba3b4a",
+  "node_count": 744,
+  "coordinate_base": 2048,
+  "encoding": {
+    "Pillow": "12.2.0",
+    "libwebp": "1.6.0",
+    "method": 6
+  },
+  "derivatives": [
+    {
+      "file": "talent-atlas-preview.webp",
+      "width": 1024,
+      "height": 1024,
+      "quality": 84,
+      "bytes": 88468,
+      "sha256": "45293cbe6f3fe14589da9a78387354bb8abb414aabb01040aaa546f62acd5bb3",
+      "geometry": "entire square bake; no crop, rotation or coordinate change",
+      "pixel_identity": "lossy WebP derivative of the verified native image"
+    },
+    {
+      "file": "talent-atlas-detail.webp",
+      "width": 4096,
+      "height": 4096,
+      "quality": 90,
+      "bytes": 3859114,
+      "sha256": "044293a95cf624718abff735fe878fb1dd912660992f4362674c6fef82121150",
+      "geometry": "entire square bake; no crop, rotation or coordinate change",
+      "pixel_identity": "lossy WebP derivative of the verified native image"
+    }
+  ]
+}
