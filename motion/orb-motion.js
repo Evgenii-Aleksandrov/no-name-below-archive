@@ -86,6 +86,15 @@
     state.frame = 0;
     if (state.mode !== 'scroll') return;
     state.scrollRoot.dataset.nativeScroll = String(state.nativeScroll && !state.reduced());
+    if (state.section) {
+      const scrolling = document.scrollingElement || document.documentElement;
+      const p = clamp((scrolling.scrollTop - state.scrollAnchor) / state.scrollRange, 0, 1);
+      const direction = state.scrollBase > state.routeTravel / 2 ? -1 : 1;
+      const x = state.reduced() ? state.routeTravel : state.scrollBase + direction * p * state.scrollTravel;
+      const rotation = state.reduced() ? 0 : state.scrollRotation + (x - state.scrollBase) / (state.size / 2);
+      state.token.style.transform = `translateX(${x}px) rotate(${rotation}rad)`;
+      return;
+    }
     const y = state.reduced() ? 0 : progress() * state.scrollTravel;
     state.token.style.transform = state.nativeScroll && !state.reduced()
       ? '' : `translateY(${y}px) rotate(${y / (state.size / 2)}rad)`;
@@ -102,6 +111,11 @@
     state.token.classList.add('nnb-orb-token-scroll');
     state.token.style.opacity = '1';
     state.token.style.willChange = '';
+    if (state.section) {
+      state.scrollAnchor = (document.scrollingElement || document.documentElement).scrollTop;
+      state.scrollBase = state.settledX;
+      state.scrollRotation = state.settledRotation;
+    }
     state.scrollRoot.append(state.token);
     updateScroll();
   }
@@ -142,16 +156,19 @@
       throw new TypeError('NNBOrbMotion.init needs routeHost and scrollHost elements.');
     }
     destroy();
-    const size = clamp(Number(options.size) || 36, 32, 40);
+    const section = options.presentation === 'section';
+    const size = section ? clamp(Number(options.size) || 88, 64, 88) : clamp(Number(options.size) || 36, 32, 40);
     const routeTravel = clamp(Number(options.routeTravel) || 96, 48, 160);
-    const scrollTravel = clamp(Number(options.scrollTravel) || 160, 64, 240);
+    const scrollTravel = section ? clamp(Number(options.scrollTravel) || 64, 24, 64) : clamp(Number(options.scrollTravel) || 160, 64, 240);
     const routeRoot = document.createElement('span');
     const scrollRoot = document.createElement('span');
     routeRoot.className = 'nnb-orb-rail nnb-orb-route';
     scrollRoot.className = 'nnb-orb-rail nnb-orb-scroll';
     for (const root of [routeRoot, scrollRoot]) {
+      if (section) root.classList.add('nnb-orb-section');
       root.setAttribute('aria-hidden', 'true');
       root.style.setProperty('--nnb-orb-size', size + 'px');
+      root.style.setProperty('--nnb-orb-crest-span', routeTravel + 'px');
     }
     routeRoot.style.setProperty('--nnb-orb-travel', routeTravel + 'px');
     scrollRoot.style.setProperty('--nnb-orb-travel', scrollTravel + 'px');
@@ -166,10 +183,12 @@
     token.hidden = true;
     token.append(image);
     const media = matchMedia('(prefers-reduced-motion: reduce)');
-    const nativeScroll = options.scrollTimeline !== false && CSS.supports('animation-timeline: scroll(root block)');
+    const nativeScroll = !section && options.scrollTimeline !== false && CSS.supports('animation-timeline: scroll(root block)');
     state = {
       routeRoot, scrollRoot, token, image, media, size, routeTravel, scrollTravel,
-      duration: clamp(Number(options.duration) || 560, 480, 620),
+      duration: section ? clamp(Number(options.duration) || 680, 560, 720) : clamp(Number(options.duration) || 560, 480, 620),
+      section, scrollRange: clamp(Number(options.scrollRange) || 320, 240, 480),
+      settledX: 0, settledRotation: 0, scrollAnchor: 0, scrollBase: 0, scrollRotation: 0,
       reduced: () => options.reducedMotion === true || media.matches,
       nativeScroll, mode: 'scroll', animation: null, frame: 0,
       defaultSrc, currentSrc: null, textureSequence: 0, textures: new Map(), textureImages: new Map(), textureErrors: new Set(),
@@ -215,6 +234,11 @@
       rotation = Math.atan2(matrix.m12, matrix.m11);
       cancel('superseded');
     }
+    if (state.section && !interrupted && !state.token.hidden) {
+      const matrix = new DOMMatrixReadOnly(getComputedStyle(state.token).transform);
+      x = matrix.m41;
+      rotation = Math.atan2(matrix.m12, matrix.m11);
+    }
     state.route = id;
     selectTexture(state, id);
     emit('route-start', { previous });
@@ -227,21 +251,32 @@
     state.token.classList.remove('nnb-orb-token-scroll');
     state.token.style.willChange = 'transform, opacity';
     state.routeRoot.append(state.token);
-    const end = direction > 0 ? state.routeTravel : 0;
+    const end = state.section && options.direction === undefined
+      ? (x > state.routeTravel / 2 ? 0 : state.routeTravel) : (direction > 0 ? state.routeTravel : 0);
     const endRotation = rotation + (end - x) / (state.size / 2);
     const from = `translateX(${x}px) rotate(${rotation}rad)`;
     const to = `translateX(${end}px) rotate(${endRotation}rad)`;
     state.token.style.transform = from;
-    const animation = state.token.animate([
+    const overshoot = end + (end >= x ? 4 : -4);
+    const overRotation = rotation + (overshoot - x) / (state.size / 2);
+    const frames = state.section ? [
+      { transform: from, opacity: 1, offset: 0, easing: 'cubic-bezier(.22,1,.36,1)' },
+      { transform: `translateX(${overshoot}px) rotate(${overRotation}rad)`, opacity: 1, offset: .82, easing: 'cubic-bezier(.2,.8,.2,1)' },
+      { transform: to, opacity: 1, offset: 1 }
+    ] : [
       { transform: from, opacity: interrupted ? 1 : 0 },
       { opacity: 1, offset: .15 },
       { opacity: 1, offset: .85 },
       { transform: to, opacity: 0 }
-    ], { duration: state.duration, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'forwards' });
+    ];
+    const animation = state.token.animate(frames, {
+      duration: state.duration, easing: state.section ? 'linear' : 'cubic-bezier(.22,1,.36,1)', fill: 'forwards'
+    });
     state.animation = animation;
     animation.onfinish = () => {
       if (!state || state.animation !== animation) return;
       state.animation = null;
+      if (state.section) { state.settledX = end; state.settledRotation = endRotation; }
       animation.cancel();
       showScroll();
       emit('route-settle', { instant: false });

@@ -7,7 +7,7 @@ function setupPlanner(catalog, byId, statText, esc) {
   let origin='warrior_center', selected=origin, allocated=new Set([origin]), history=[], zoom=.8, pan={x:0,y:0}, drag=null;
   let pendingShareHash='',opening=false,imageFrame=0,viewWidth=0,viewHeight=0,dpr=1,atlas=null,atlasPromise=null,artwork=null,detailPromise=null,pendingView=null;
   const ART='engine/idle-game-engine/assets/talent_tree/', WEB_ART='assets/';
-  const pointers=new Map();let pinch=null;
+  const pointers=new Map();let pinch=null,popupOpen=false,pressed=null;
   const COORDINATE_SHA='1ff03d69817c37e2a04868842733ad28ba3731a9e3d191c51716e1990aba3b4a';
   const ownedFetches=new Set(),events=new AbortController(),ignoredPointers=new Set();
   let active=false,disposed=false,activation=0,coordinatesPromise=null,previewPromise=null,viewIntent={kind:'fit',pending:true};
@@ -76,11 +76,11 @@ function setupPlanner(catalog, byId, statText, esc) {
     });
   }
   function cancelGesture(){
-    const held=[...pointers.keys()];held.forEach(id=>ignoredPointers.add(id));pointers.clear();drag=null;pinch=null;
+    const held=[...pointers.keys()];held.forEach(id=>ignoredPointers.add(id));pointers.clear();drag=null;pinch=null;pressed=null;draw();
     for(const id of held)if(canvas.hasPointerCapture(id))canvas.releasePointerCapture(id);
   }
   function deactivate(){
-    active=false;activation++;pendingView=null;
+    active=false;activation++;pendingView=null;closePopup();
     if(imageFrame){cancelAnimationFrame(imageFrame);imageFrame=0;}
     cancelGesture();
   }
@@ -125,6 +125,12 @@ function setupPlanner(catalog, byId, statText, esc) {
   function xy(r){const p=atlas?.nodes[r.id];return p?point(p):null;}
   function radius(id){return (atlas?.nodes[id]?.r||0)*2*zoom;}
   function hitRadius(id){return Math.max(viewWidth<600?22:12,radius(id)+2);}
+  function hitNode(e){
+    if(!atlas||!artwork?.naturalWidth)return null;
+    const rect=canvas.getBoundingClientRect(),p={x:e.clientX-rect.left,y:e.clientY-rect.top};
+    const nearest=nodes.map(r=>({r,d:Math.hypot(xy(r).x-p.x,xy(r).y-p.y)})).sort((a,b)=>a.d-b.d)[0];
+    return nearest&&nearest.d<=hitRadius(nearest.r.id)?nearest.r.id:null;
+  }
   function draw(){const ticket=activation;if(current(ticket)&&!imageFrame)imageFrame=requestAnimationFrame(()=>{imageFrame=0;if(current(ticket))paint();});}
   function bezier(a,c,b,t){const u=1-t;return {x:u*u*a.x+2*u*t*c.x+t*t*b.x,y:u*u*a.y+2*u*t*c.y+t*t*b.y};}
   function trimCurve(a,c,b,ra,rb){
@@ -137,6 +143,7 @@ function setupPlanner(catalog, byId, statText, esc) {
   }
   function paint(){
     if(!current(activation)||!viewWidth)return;
+    placePopup();
     ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,viewWidth,viewHeight);
     if(!atlas||!artwork?.complete||!artwork.naturalWidth)return;
     ctx.drawImage(artwork,viewWidth/2+pan.x,viewHeight/2+pan.y,4096*zoom,4096*zoom);
@@ -152,17 +159,18 @@ function setupPlanner(catalog, byId, statText, esc) {
     const filter=el('plan-search').value.trim().toLowerCase();
     for(const n of nodes){
       const active=allocated.has(n.id),available=chained(n.id,allocated),match=filter&&n.search.includes(filter);
-      if(n.id!==selected&&!active&&!available&&!match)continue;
+      if(n.id!==selected&&n.id!==pressed&&!active&&!available&&!match)continue;
       const p=xy(n),r=radius(n.id);
       if(p.x+r<0||p.y+r<0||p.x-r>viewWidth||p.y-r>viewHeight)continue;
       ctx.lineWidth=n.id===selected?2.5:active?2:1;
       ctx.strokeStyle=n.id===selected?'#fff4ce':active?'#e3b761':match?'#e9d19c':'#c8cfad';
       ctx.beginPath();ctx.arc(p.x,p.y,r+2,0,Math.PI*2);ctx.stroke();
       if(n.id===selected){ctx.strokeStyle='#e5bb6855';ctx.lineWidth=1;ctx.beginPath();ctx.arc(p.x,p.y,r+7,0,Math.PI*2);ctx.stroke();}
+      if(n.id===pressed){ctx.strokeStyle="#fff1bb";ctx.lineWidth=4;ctx.beginPath();ctx.arc(p.x,p.y,r+5,0,Math.PI*2);ctx.stroke();}
       if(active&&n.id!==origin){ctx.fillStyle='#edcf87';ctx.beginPath();ctx.arc(p.x+r*.75,p.y-r*.75,3,0,Math.PI*2);ctx.fill();}
     }
   }
-  function resize(){if(!current(activation))return;const box=canvas.parentElement.getBoundingClientRect();viewWidth=Math.round(box.width);viewHeight=Math.round(box.height);dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(viewWidth*dpr);canvas.height=Math.round(viewHeight*dpr);el('plan-node').size=viewWidth<600?1:4;el('atlas-hint').textContent=viewWidth<600||matchMedia('(pointer: coarse)').matches?'Drag to pan · Pinch or + / − to zoom · Tap a talent':'Drag to explore · Scroll to zoom · Select to inspect';draw();}
+  function resize(){if(!current(activation))return;const box=canvas.parentElement.getBoundingClientRect();viewWidth=Math.round(box.width);viewHeight=Math.round(box.height);dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(viewWidth*dpr);canvas.height=Math.round(viewHeight*dpr);el('plan-node').size=1;el('atlas-hint').textContent=viewWidth<600||matchMedia('(pointer: coarse)').matches?'Drag to pan · Pinch or + / − to zoom · Tap to allocate / remove':'Drag to explore · Scroll to zoom · Click to allocate / remove';draw();}
   function fit(){
     if(!current(activation))return;viewIntent={kind:'fit'};resize();if(!atlas){viewIntent.pending=true;pendingView={...viewIntent,ticket:activation};loadImages();return;}pendingView=null;
     const ps=Object.values(atlas.nodes),minX=Math.min(...ps.map(p=>p.x-p.r)),maxX=Math.max(...ps.map(p=>p.x+p.r)),minY=Math.min(...ps.map(p=>p.y-p.r)),maxY=Math.max(...ps.map(p=>p.y+p.r));
@@ -173,16 +181,53 @@ function setupPlanner(catalog, byId, statText, esc) {
     const p=atlas.nodes[id];if(!p)return;zoom=viewWidth<600?(id===origin?1.1:Math.max(zoom,1.5)):Math.max(zoom,.8);pan={x:-p.x*2*zoom,y:-p.y*2*zoom};draw();
   }
 
-  function choose(id,{reveal=false}={}){if(!map.has(id))return;selected=id;update();if(reveal&&viewWidth<600)el('plan-selection').scrollIntoView({block:'nearest',behavior:'instant'});}
+  function removable(id){return id!==origin&&reachable([...allocated].filter(x=>x!==id)).size===allocated.size-1;}
+  function selectionReason(id){
+    if(id===origin)return 'Your class origin is free and fixed.';
+    if(allocated.has(id))return removable(id)?'Allocated. Tap again to remove.':'Other choices depend on this talent. Remove the end of this path first.';
+    return chained(id,allocated)?'Available. Tap to allocate.':'Connect this talent to your class origin first.';
+  }
+  function closePopup(){
+    const popup=el('plan-selection'),ownsFocus=popup.contains(document.activeElement);
+    popupOpen=false;popup.hidden=true;if(ownsFocus&&current(activation))canvas.focus({preventScroll:true});
+  }
+  function placePopup(){
+    const popup=el('plan-selection'),p=xy(map.get(selected)),box=canvas.getBoundingClientRect();
+    const top=Math.max(8,8-box.top),bottom=Math.min(viewHeight,innerHeight-box.top)-8;
+    if(!popupOpen||!p||p.x<0||p.x>viewWidth||p.y<top||p.y>bottom||bottom-top<90){popup.hidden=true;return;}
+    popup.hidden=false;popup.style.maxHeight=Math.min(270,bottom-top)+'px';
+    const w=popup.offsetWidth,gap=Math.max(radius(selected),hitRadius(selected))+12;
+    if(Math.max(p.x-gap-8,viewWidth-p.x-gap-8)<w){
+      const room=Math.max(p.y-gap-top,bottom-p.y-gap);
+      if(room<90){popup.hidden=true;return;}
+      popup.style.maxHeight=Math.min(270,bottom-top,room)+'px';
+    }
+    const h=popup.offsetHeight;
+    const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
+    const nearby=nodes.filter(n=>n.id!==selected&&!allocated.has(n.id)&&chained(n.id,allocated)).map(n=>({p:xy(n),r:hitRadius(n.id)}));
+    const candidates=[.25,.5,.75].flatMap(f=>[[p.x+gap,p.y-h*f],[p.x-gap-w,p.y-h*f],[p.x-w*f,p.y-gap-h],[p.x-w*f,p.y+gap]]);
+    const ranked=candidates.map(([x,y])=>{
+      const left=clamp(x,8,viewWidth-w-8),t=clamp(y,top,bottom-h);
+      const overlap=(pt,r)=>pt&&pt.x+r>left&&pt.x-r<left+w&&pt.y+r>t&&pt.y-r<t+h;
+      const score=(overlap(p,hitRadius(selected))?100:0)+nearby.filter(n=>overlap(n.p,n.r)).length;
+      return {left,top:t,score,distance:Math.hypot(left+w/2-p.x,t+h/2-p.y)};
+    }).sort((a,b)=>a.score-b.score||a.distance-b.distance);
+    popup.style.left=ranked[0].left+'px';popup.style.top=ranked[0].top+'px';
+  }
+  function choose(id,{act=false}={}){
+    if(!map.has(id))return;selected=id;popupOpen=true;if(act)toggle(id);update();
+  }
   function update(){
-    const r=map.get(selected)||map.get(origin),d=r.data, active=allocated.has(r.id),available=chained(r.id,allocated);
-    el('plan-count').textContent=`${allocated.size-1} talent${allocated.size===2?'':'s'} · ${spent()} point${spent()===1?'':'s'}`;
-    el('plan-selection').innerHTML=`<img src="${esc(r.image)}" alt=""><p class="eyebrow">${esc(d.kind)} · ${d.cost??1} point${(d.cost??1)===1?'':'s'}</p><h2>${esc(r.name)}</h2><p>${esc(r.description)}</p><div class="plan-stats">${Object.entries(d.passive_effects||{}).map(([k,v])=>`<p>${esc(statText(k,v).join(': '))}</p>`).join('')}</div>${d.grants_skill_id?`<p>Grants <a href="#entry/${d.grants_skill_id}">${esc(byId.get(d.grants_skill_id)?.name||d.grants_skill_id)}</a></p>`:''}<button id="plan-allocate" ${r.id===origin||(!active&&!available)?'disabled':''}>${r.id===origin?'Class origin':active?'Remove talent':'Allocate talent'}</button><button id="plan-locate">Locate</button><a href="#entry/${r.id}">Full details →</a>`;
-    el('plan-allocate').onclick=()=>toggle(r.id);el('plan-locate').onclick=()=>focus(r.id);
-    el('plan-message').textContent=r.id===origin?'Your class origin is free. Choose one of its four entry paths.':active?'Allocated. Remove outer choices before removing a connecting talent.':available?'Connected to your build. Ready to allocate.':'Connect a path to this talent first.';
+    const r=map.get(selected)||map.get(origin),d=r.data,active=allocated.has(r.id),available=chained(r.id,allocated),reason=selectionReason(r.id);
+    el('plan-count').textContent=`${allocated.size-1} talent${allocated.size===2?'':'s'} / ${spent()} point${spent()===1?'':'s'}`;
+    el('plan-selection').innerHTML=`<button id="plan-popup-close" aria-label="Close talent popup">&times;</button><div class="node-popup-heading">${r.image?`<img src="${esc(r.image)}" alt="" width="40" height="40">`:''}<div><p class="node-popup-meta">${esc(d.kind)} / ${d.cost??1} point${(d.cost??1)===1?'':'s'}</p><h2 id="plan-node-title"><a class="node-popup-details" href="#entry/${r.id}" aria-label="${esc(r.name)}: full details">${esc(r.name)}</a></h2></div></div><div class="plan-stats">${Object.entries(d.passive_effects||{}).map(([k,v])=>`<p>${esc(statText(k,v).join(': '))}</p>`).join('')||`<p>${esc(r.description)}</p>`}</div>${d.grants_skill_id?`<p>Grants <a href="#entry/${d.grants_skill_id}">${esc(byId.get(d.grants_skill_id)?.name||d.grants_skill_id)}</a></p>`:''}<p class="node-popup-reason">${esc(reason)}</p>`;
+    el('plan-popup-close').onclick=closePopup;
+    const action=el('plan-allocate');action.disabled=r.id===origin||(!active&&!available)||(active&&!removable(r.id));
+    action.textContent=r.id===origin?'Class origin':active?'Remove talent':'Allocate talent';
+    el('plan-message').textContent=reason;
     const totals={};for(const id of allocated)for(const [k,v] of Object.entries(map.get(id).data.passive_effects||{}))if(typeof v==='number')totals[k]=(totals[k]||0)+v;
-    el('plan-summary').innerHTML=`<p class="muted">Unlimited build planning. Points shown are spent costs, not earned points. Bonuses are additive inputs, not final combat stats; equipment and resonance are excluded.</p>${Object.entries(totals).map(([k,v])=>{const [label,value]=statText(k,v);return `<div class="summary-row"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`;}).join('')||'<p>Allocate a talent to begin your build.</p>'}`;
-    el('plan-undo').disabled=!history.length;options();draw();
+    el('plan-summary').innerHTML=`${Object.entries(totals).map(([k,v])=>{const [label,value]=statText(k,v);return `<div class="summary-row"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`;}).join('')||'<p class="summary-empty">Choose a talent to begin.</p>'}<p class="summary-note">Unlimited planning. Spent costs, not earned points. Additive inputs; equipment and resonance excluded.</p>`;
+    el('plan-undo').disabled=!history.length;options();placePopup();draw();
   }
   function options(){
     const q=el('plan-search').value.trim().toLowerCase(),view=el('plan-view').value;
@@ -195,29 +240,35 @@ function setupPlanner(catalog, byId, statText, esc) {
   canvas.addEventListener('pointerdown',e=>{
     if(!current(activation))return;
     if(ignoredPointers.size){if(!e.isPrimary){ignoredPointers.add(e.pointerId);return;}ignoredPointers.clear();}
-    pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});canvas.setPointerCapture(e.pointerId);
+    closePopup();pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});canvas.setPointerCapture(e.pointerId);
     if(pointers.size>2){cancelGesture();return;}
-    if(pointers.size===1)drag={id:e.pointerId,x:e.clientX,y:e.clientY,px:pan.x,py:pan.y,moved:false};
-    else if(pointers.size===2){const g=gesture();pinch={...g,zoom,pan:{...pan}};if(drag)drag.moved=true;}
+    if(pointers.size===1){drag={id:e.pointerId,x:e.clientX,y:e.clientY,px:pan.x,py:pan.y,moved:false};pressed=hitNode(e);draw();}
+    else if(pointers.size===2){const g=gesture();pinch={...g,zoom,pan:{...pan}};pressed=null;if(drag)drag.moved=true;draw();}
   },{signal:events.signal});
   canvas.addEventListener('pointermove',e=>{
     if(!current(activation)||!pointers.has(e.pointerId))return;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
     if(pinch&&pointers.size===2){const g=gesture(),next=Math.max(.035,Math.min(2.5,pinch.zoom*g.distance/Math.max(1,pinch.distance))),f=next/pinch.zoom;pan={x:g.x-(pinch.x-pinch.pan.x)*f,y:g.y-(pinch.y-pinch.pan.y)*f};zoom=next;draw();return;}
-    if(!drag||drag.id!==e.pointerId)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.moved||=Math.hypot(dx,dy)>5;pan={x:drag.px+dx,y:drag.py+dy};draw();
+    if(!drag||drag.id!==e.pointerId)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.moved||=Math.hypot(dx,dy)>5;if(drag.moved)pressed=null;pan={x:drag.px+dx,y:drag.py+dy};draw();
   },{signal:events.signal});
   canvas.addEventListener('pointerup',e=>{
     if(!current(activation)||!pointers.has(e.pointerId)){ignoredPointers.delete(e.pointerId);return;}
-    if(drag?.id===e.pointerId&&!drag.moved&&!pinch&&artwork?.naturalWidth){const rect=canvas.getBoundingClientRect(),p={x:e.clientX-rect.left,y:e.clientY-rect.top};const nearest=atlas&&nodes.map(r=>({r,d:Math.hypot(xy(r).x-p.x,xy(r).y-p.y)})).sort((a,b)=>a.d-b.d)[0];if(nearest&&nearest.d<=hitRadius(nearest.r.id))choose(nearest.r.id,{reveal:true});}
+    if(drag?.id===e.pointerId&&!drag.moved&&!pinch){const id=hitNode(e);if(id)choose(id,{act:true});}
+    pressed=null;draw();
     pointers.delete(e.pointerId);pinch=null;
     if(pointers.size===1){const [id,p]=[...pointers.entries()][0];drag={id,x:p.x,y:p.y,px:pan.x,py:pan.y,moved:true};}else drag=null;
   },{signal:events.signal});
   canvas.addEventListener('pointercancel',e=>{if(pointers.has(e.pointerId))cancelGesture();ignoredPointers.delete(e.pointerId);},{signal:events.signal});
   canvas.addEventListener('lostpointercapture',e=>{if(pointers.has(e.pointerId)){deactivate();if(!el('planner').hidden&&!el('detail').open)activate();}},{signal:events.signal});
   for(const type of ['pointerup','pointercancel'])window.addEventListener(type,e=>ignoredPointers.delete(e.pointerId),{capture:true,signal:events.signal});
-  canvas.addEventListener('wheel',e=>{if(!current(activation))return;e.preventDefault();const factor=e.deltaY<0?1.15:1/1.15;const next=Math.max(.035,Math.min(2.5,zoom*factor)),f=next/zoom;const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left-viewWidth/2,y=e.clientY-rect.top-viewHeight/2;pan={x:x-(x-pan.x)*f,y:y-(y-pan.y)*f};zoom=next;draw();},{passive:false,signal:events.signal});
+  canvas.addEventListener('wheel',e=>{if(!current(activation))return;e.preventDefault();closePopup();const factor=e.deltaY<0?1.15:1/1.15;const next=Math.max(.035,Math.min(2.5,zoom*factor)),f=next/zoom;const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left-viewWidth/2,y=e.clientY-rect.top-viewHeight/2;pan={x:x-(x-pan.x)*f,y:y-(y-pan.y)*f};zoom=next;draw();},{passive:false,signal:events.signal});
   el('plan-class').onchange=()=>{save();origin=el('plan-class').value;selected=origin;history=[];restore();focus(origin);update();options();};
-  el('plan-search').oninput=options;el('plan-node').onchange=()=>choose(el('plan-node').value,{reveal:true});
+  el('plan-search').oninput=options;el('plan-node').onchange=()=>choose(el('plan-node').value);
   el('plan-view').onchange=options;
+  el('plan-allocate').onclick=()=>{popupOpen=true;toggle(selected);update();};
+  el('plan-locate').onclick=()=>{popupOpen=true;focus(selected);draw();};
+  document.addEventListener('pointerdown',e=>{if(!el('atlas-stage').contains(e.target)&&!e.target.closest('.planner-picker'))closePopup();},{signal:events.signal});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closePopup();},{signal:events.signal});
+  window.addEventListener('scroll',()=>{if(popupOpen)draw();},{passive:true,signal:events.signal});
   el('plan-fit').onclick=fit;el('plan-focus').onclick=()=>{choose(origin);focus(origin);};
   el('plan-zoom-in').onclick=()=>{const f=Math.min(1.35,2.5/zoom);zoom*=f;pan.x*=f;pan.y*=f;draw();};
   el('plan-zoom-out').onclick=()=>{const f=Math.max(1/1.35,.035/zoom);zoom*=f;pan.x*=f;pan.y*=f;draw();};
@@ -249,7 +300,7 @@ function setupPlanner(catalog, byId, statText, esc) {
     else if(params.has('node')&&!activeNodeAllocated(params.get('node'))){const target=map.get(params.get('node')),inferred=classes.includes(target?.id)?target.id:target?.data.entry_origin;if(classes.includes(inferred)&&inferred!==origin){origin=inferred;history=[];}}
     el('plan-class').value=origin;
     if(ids){load(ids);save();const dropped=[...new Set(ids)].filter(id=>!allocated.has(id));if(dropped.length)el('plan-import-message').textContent=`Ignored ${dropped.length} unknown or disconnected talent${dropped.length===1?'':'s'}. Only connected choices were imported.`;}else restore();
-    resize();selected=map.has(params.get('node'))?params.get('node'):viewWidth<600?[...allocated].filter(id=>id!==origin).at(-1)||origin:origin;options();fit();if(viewWidth<600||params.has('node')||allocated.size===1)focus(selected);opening=false;update();
+    resize();selected=map.has(params.get('node'))?params.get('node'):viewWidth<600?[...allocated].filter(id=>id!==origin).at(-1)||origin:origin;popupOpen=params.has('node');options();fit();if(viewWidth<600||params.has('node')||allocated.size===1)focus(selected);opening=false;update();
   },activate,deactivate,dispose,chained,reachable,toggle,choose,buildHash,ready:loadImages,nodeGeometry:id=>map.has(id)?{center:xy(map.get(id)),radius:radius(id),hitRadius:hitRadius(id)}:null,projectNode:id=>map.has(id)?xy(map.get(id)):null,getState:()=>({origin,selected,allocated:[...allocated],spent:spent(),view:{zoom,pan:{...pan},width:viewWidth,height:viewHeight,dpr,bakeScale:2},artworkReady:!!artwork?.naturalWidth,artworkResolution:artwork?.naturalWidth||0})};
   function activeNodeAllocated(id){return allocated.has(id);}
 }
