@@ -4,7 +4,8 @@
 function setupPlanner(catalog, byId, statText, esc) {
   const el=id=>document.getElementById(id), canvas=el('atlas'), ctx=canvas.getContext('2d');
   const nodes=catalog.records.filter(r=>r.category==='talents'), map=new Map(nodes.map(r=>[r.id,r]));
-  let origin='warrior_center', selected=origin, allocated=new Set([origin]), history=[], zoom=.8, pan={x:0,y:0}, drag=null;
+  const effects=new Map(nodes.map(r=>[r.id,[...(!r.id.endsWith('_center')&&r.description?[r.description]:[]),...Object.entries(r.data.passive_effects||{}).map(([k,v])=>statText(k,v).join(': ')),...(r.data.grants_skill_id?['Grants '+(byId.get(r.data.grants_skill_id)?.name||r.data.grants_skill_id),byId.get(r.data.grants_skill_id)?.description||'']:[])].filter(Boolean).join(' / ')]));
+  let origin='warrior_center', selected=origin, allocated=new Set([origin]), history=[], zoom=.8, pan={x:0,y:0}, drag=null, searchCursor=-1;
   let pendingShareHash='',opening=false,imageFrame=0,viewWidth=0,viewHeight=0,dpr=1,atlas=null,atlasPromise=null,artwork=null,detailPromise=null,pendingView=null;
   const ART='engine/idle-game-engine/assets/talent_tree/', WEB_ART='assets/';
   const pointers=new Map();let pinch=null,popupOpen=false,pressed=null;
@@ -158,7 +159,7 @@ function setupPlanner(catalog, byId, statText, esc) {
     }
     const filter=el('plan-search').value.trim().toLowerCase();
     for(const n of nodes){
-      const active=allocated.has(n.id),available=chained(n.id,allocated),match=filter&&n.search.includes(filter);
+      const active=allocated.has(n.id),available=chained(n.id,allocated),match=filter&&effects.get(n.id).toLowerCase().includes(filter);
       if(n.id!==selected&&n.id!==pressed&&!active&&!available&&!match)continue;
       const p=xy(n),r=radius(n.id);
       if(p.x+r<0||p.y+r<0||p.x-r>viewWidth||p.y-r>viewHeight)continue;
@@ -170,7 +171,7 @@ function setupPlanner(catalog, byId, statText, esc) {
       if(active&&n.id!==origin){ctx.fillStyle='#edcf87';ctx.beginPath();ctx.arc(p.x+r*.75,p.y-r*.75,3,0,Math.PI*2);ctx.fill();}
     }
   }
-  function resize(){if(!current(activation))return;const box=canvas.parentElement.getBoundingClientRect();viewWidth=Math.round(box.width);viewHeight=Math.round(box.height);dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(viewWidth*dpr);canvas.height=Math.round(viewHeight*dpr);el('plan-node').size=1;el('atlas-hint').textContent=viewWidth<600||matchMedia('(pointer: coarse)').matches?'Drag to pan · Pinch or + / − to zoom · Tap to allocate / remove':'Drag to explore · Scroll to zoom · Click to allocate / remove';draw();}
+  function resize(){if(!current(activation))return;const box=canvas.parentElement.getBoundingClientRect();viewWidth=Math.round(box.width);viewHeight=Math.round(box.height);dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(viewWidth*dpr);canvas.height=Math.round(viewHeight*dpr);el('atlas-hint').textContent=viewWidth<600||matchMedia('(pointer: coarse)').matches?'Drag to pan · Pinch or + / − to zoom · Tap to allocate / remove':'Drag to explore · Scroll to zoom · Click to allocate / remove';draw();}
   function fit(){
     if(!current(activation))return;viewIntent={kind:'fit'};resize();if(!atlas){viewIntent.pending=true;pendingView={...viewIntent,ticket:activation};loadImages();return;}pendingView=null;
     const ps=Object.values(atlas.nodes),minX=Math.min(...ps.map(p=>p.x-p.r)),maxX=Math.max(...ps.map(p=>p.x+p.r)),minY=Math.min(...ps.map(p=>p.y-p.r)),maxY=Math.max(...ps.map(p=>p.y+p.r));
@@ -218,23 +219,20 @@ function setupPlanner(catalog, byId, statText, esc) {
     if(!map.has(id))return;selected=id;popupOpen=true;if(act)toggle(id);update();
   }
   function update(){
-    const r=map.get(selected)||map.get(origin),d=r.data,active=allocated.has(r.id),available=chained(r.id,allocated),reason=selectionReason(r.id);
+    const r=map.get(selected)||map.get(origin),d=r.data,reason=selectionReason(r.id);
     el('plan-count').textContent=`${allocated.size-1} talent${allocated.size===2?'':'s'} / ${spent()} point${spent()===1?'':'s'}`;
     el('plan-selection').innerHTML=`<button id="plan-popup-close" aria-label="Close talent popup">&times;</button><div class="node-popup-heading">${r.image?`<img src="${esc(r.image)}" alt="" width="40" height="40">`:''}<div><p class="node-popup-meta">${esc(d.kind)} / ${d.cost??1} point${(d.cost??1)===1?'':'s'}</p><h2 id="plan-node-title"><a class="node-popup-details" href="#entry/${r.id}" aria-label="${esc(r.name)}: full details">${esc(r.name)}</a></h2></div></div><div class="plan-stats">${Object.entries(d.passive_effects||{}).map(([k,v])=>`<p>${esc(statText(k,v).join(': '))}</p>`).join('')||`<p>${esc(r.description)}</p>`}</div>${d.grants_skill_id?`<p>Grants <a href="#entry/${d.grants_skill_id}">${esc(byId.get(d.grants_skill_id)?.name||d.grants_skill_id)}</a></p>`:''}<p class="node-popup-reason">${esc(reason)}</p>`;
     el('plan-popup-close').onclick=closePopup;
-    const action=el('plan-allocate');action.disabled=r.id===origin||(!active&&!available)||(active&&!removable(r.id));
-    action.textContent=r.id===origin?'Class origin':active?'Remove talent':'Allocate talent';
     el('plan-message').textContent=reason;
     const totals={};for(const id of allocated)for(const [k,v] of Object.entries(map.get(id).data.passive_effects||{}))if(typeof v==='number')totals[k]=(totals[k]||0)+v;
     el('plan-summary').innerHTML=`${Object.entries(totals).map(([k,v])=>{const [label,value]=statText(k,v);return `<div class="summary-row"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`;}).join('')||'<p class="summary-empty">Choose a talent to begin.</p>'}<p class="summary-note">Unlimited planning. Spent costs, not earned points. Additive inputs; equipment and resonance excluded.</p>`;
     el('plan-undo').disabled=!history.length;options();placePopup();draw();
   }
+  function effectMatches(){const q=el('plan-search').value.trim().toLowerCase();return q?nodes.filter(r=>effects.get(r.id).toLowerCase().includes(q)).sort((a,b)=>Number(!chained(a.id,allocated))-Number(!chained(b.id,allocated))):[];}
   function options(){
-    const q=el('plan-search').value.trim().toLowerCase(),view=el('plan-view').value;
-    const filtered=nodes.filter(r=>r.id===selected||((!q||r.search.includes(q))&&(q||view==='all'||allocated.has(r.id)||(view==='available'&&chained(r.id,allocated)))));
-    const groups=[['Available now',filtered.filter(r=>!allocated.has(r.id)&&chained(r.id,allocated))],['Your build',filtered.filter(r=>allocated.has(r.id))],['Other talents',filtered.filter(r=>!allocated.has(r.id)&&!chained(r.id,allocated))]];
-    el('plan-node').innerHTML=groups.filter(([,rows])=>rows.length).map(([name,rows])=>`<optgroup label="${name}">${rows.map(r=>`<option value="${r.id}">${esc(r.name)}</option>`).join('')}</optgroup>`).join('');
-    el('plan-node').value=selected;draw();
+    const matches=effectMatches();
+    el('plan-search-status').textContent=el('plan-search').value.trim()?(matches.length?`${matches.length} matching talents. Press Enter to inspect the next match.`:'No matching effects.') : '';
+    draw();
   }
   function gesture(){const [a,b]=[...pointers.values()],rect=canvas.getBoundingClientRect();return {distance:Math.hypot(b.x-a.x,b.y-a.y),x:(a.x+b.x)/2-rect.left-viewWidth/2,y:(a.y+b.y)/2-rect.top-viewHeight/2};}
   canvas.addEventListener('pointerdown',e=>{
@@ -262,10 +260,9 @@ function setupPlanner(catalog, byId, statText, esc) {
   for(const type of ['pointerup','pointercancel'])window.addEventListener(type,e=>ignoredPointers.delete(e.pointerId),{capture:true,signal:events.signal});
   canvas.addEventListener('wheel',e=>{if(!current(activation))return;e.preventDefault();closePopup();const factor=e.deltaY<0?1.15:1/1.15;const next=Math.max(.035,Math.min(2.5,zoom*factor)),f=next/zoom;const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left-viewWidth/2,y=e.clientY-rect.top-viewHeight/2;pan={x:x-(x-pan.x)*f,y:y-(y-pan.y)*f};zoom=next;draw();},{passive:false,signal:events.signal});
   el('plan-class').onchange=()=>{save();origin=el('plan-class').value;selected=origin;history=[];restore();focus(origin);update();options();};
-  el('plan-search').oninput=options;el('plan-node').onchange=()=>choose(el('plan-node').value);
-  el('plan-view').onchange=options;
-  el('plan-allocate').onclick=()=>{popupOpen=true;toggle(selected);update();};
-  el('plan-locate').onclick=()=>{popupOpen=true;focus(selected);draw();};
+  el('plan-search').oninput=()=>{searchCursor=-1;options();};
+  el('plan-search').onkeydown=e=>{if(e.key!=='Enter'||e.isComposing||e.repeat)return;e.preventDefault();const matches=effectMatches();if(!matches.length)return;searchCursor=(searchCursor+1)%matches.length;choose(matches[searchCursor].id);focus(selected);canvas.focus();};
+  canvas.addEventListener('keydown',e=>{if(current(activation)&&(e.key==='Enter'||e.key===' ')){e.preventDefault();if(!e.repeat)choose(selected,{act:true});}},{signal:events.signal});
   document.addEventListener('pointerdown',e=>{if(!el('atlas-stage').contains(e.target)&&!e.target.closest('.planner-picker'))closePopup();},{signal:events.signal});
   document.addEventListener('keydown',e=>{if(e.key==='Escape')closePopup();},{signal:events.signal});
   window.addEventListener('scroll',()=>{if(popupOpen)draw();},{passive:true,signal:events.signal});

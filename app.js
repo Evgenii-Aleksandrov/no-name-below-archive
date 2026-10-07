@@ -57,6 +57,38 @@ function abilityFacts(d){
   if(d.tags?.length)out.tags=d.tags;
   return out;
 }
+function skillLevelValues(d,level){
+  const values={...(d.params||{})};
+  if(level>1)for(const [key,step] of Object.entries(d.level_scaling||{}))if(typeof step==='number')values[key]=(Number(values[key])||0)+step*(level-1);
+  return values;
+}
+function skillEffectFacts(values){
+  const out={},ratios=new Set(['splash_pct','aoe_splash_pct','dot_damage_pct','secondary_dot_damage_pct','heal_ratio','arc_split_damage_ratio','splash_ratio','chip_damage_pct','self_heal_pct_max_hp']);
+  for(const [key,value] of Object.entries(values)){
+    if(['unlock_kind','apply_self_buff','apply_debuff','apply_dot','buff_stat','debuff_stat'].includes(key))continue;
+    const paired=key==='buff_value'?values.buff_stat:key==='debuff_value'?values.debuff_stat:null;
+    let label=paired?statText(paired,value)[0]:labelOf(key.replace(/_pct(?:_per_level)?$/,''));
+    let shown=typeof value==='number'&&key.endsWith('_ticks')?logicalTime(value):typeof value==='number'&&key.endsWith('_multiplier')?`${displayNumber(value)}×`:typeof value==='number'&&ratios.has(key)?`${displayNumber(value*100)}%`:typeof value==='number'&&key.includes('_pct')?`${displayNumber(value)}%`:paired?statText(paired,value)[1]:['crit_chance_flat','crit_multiplier_flat'].includes(key)?statText(key,value)[1]:val(value);
+    if(paired&&typeof value==='number'&&!catalog.stat_display[paired]&&paired.endsWith('_pct'))shown=`${displayNumber(value)}%`;
+    out[label]=shown;
+  }
+  return facts(out);
+}
+function skillProgression(r){
+  const d=r.data;
+  if(d.is_class_default)return block('Skill levels','<p>This class Ultimate has a fixed effect.</p>');
+  const max=Number(d.max_level);if(!Number.isInteger(max)||max<1)return '';
+  const kindLabels={self_buff_extension:'Self buff',dot_rider:'Damage over time',debuff_on_hit:'On-hit debuff',aoe_or_multi_target:'Area and targets',lifesteal_on_hit:'Life steal',cooldown_reset:'Cooldown',splash:'Splash damage',mark_charge:'Mark effects'};
+  const rows=Array.from({length:max},(_,i)=>{
+    const level=i+1,values=skillLevelValues(d,level),scaling=Object.keys(d.level_scaling||{});
+    const shown=level===1?values:Object.fromEntries(scaling.filter(key=>values[key]!==undefined).map(key=>[key,values[key]]));
+    for(const prefix of ['buff','debuff'])if(Object.hasOwn(shown,`${prefix}_value`)&&values[`${prefix}_stat`])shown[`${prefix}_stat`]=values[`${prefix}_stat`];
+    const raw=d.rank_unlocks?.[String(level)],unlocks=raw?(Array.isArray(raw)?raw:[raw]):[];
+    const bonuses=unlocks.map(feature=>`<li><strong>${esc(kindLabels[feature.unlock_kind]||'Additional effect')}</strong>${skillEffectFacts(feature)}</li>`).join('');
+    return `<tr data-level="${level}"><th scope="row">${level}</th><td data-label="Effect values">${skillEffectFacts(shown)||'<p>Base effects unchanged.</p>'}</td><td data-label="Bonuses gained">${bonuses?`<ul class="skill-unlocks">${bonuses}</ul>`:level===1?'<p>Base effects.</p>':'<p>Earlier bonuses retained.</p>'}</td></tr>`;
+  }).join('');
+  return block('Skill levels',`<p class="skill-level-note">Values are totals at each level. Earlier bonuses remain active; other base effects stay unchanged.</p><table class="skill-levels"><thead><tr><th scope="col">Level</th><th scope="col">Effect values</th><th scope="col">Bonuses gained</th></tr></thead><tbody>${rows}</tbody></table>`);
+}
 function abilityPreview(r){const d=r.data,p=d.params||{},parts=[];
   if(d.effect_type||d.effect)parts.push(val(d.effect_type||d.effect));if(d.damage_type)parts.push(title(d.damage_type));
   if(typeof (p.damage_multiplier??d.damage_mult)==='number')parts.push(`${displayNumber(p.damage_multiplier??d.damage_mult)}\u00d7 attack input`);
@@ -181,7 +213,7 @@ function showEntry(id){
   const statValues=r.category==='subclasses'?{}:stats(r),resistances=Object.fromEntries(Object.entries(d.resistances||{}).map(([k,v])=>[k,`${displayNumber(v*100)}%`]));
   const sidebar=`${r.category==='enemies'&&combatArt(r)?enemyStage(r):image?`<img class="detail-portrait" src="${esc(image)}" alt="${esc(r.name)}">`:''}${block('At a glance',facts({...info,...(r.category==='enemies'?{}:statValues)},true))}${block('Resistances',facts(resistances))}${block('Requirements',facts(d.requirements,true))}${block('Implicit bonuses',facts(d.implicit_bonuses,true))}`;
   const bonuses=d.specialization_bonuses?`<ul class="specialization-bonuses">${Object.entries(d.specialization_bonuses).map(([k,v])=>`<li>${esc(bonusText(k,v))}</li>`).join('')}</ul>`:'';
-  $('detail-body').innerHTML=`<div class="detail-topline"><a href="#${r.category}">${esc(categories[r.category][0])}</a><span>/</span>${esc(r.name)}</div><div class="detail-layout${sidebar?'':' text-only-detail'}">${sidebar?'<aside class="detail-sidebar">'+sidebar+'</aside>':''}<div class="detail-main"><div class="detail-top text-detail"><div><p class="eyebrow">${esc(categories[r.category][0])}${ultimateLabel(r)?' / '+esc(ultimateLabel(r)):''}${r.tier?' / TIER '+roman[r.tier]:''}</p><h2 id="detail-title">${esc(r.name)}</h2>${description?`${lore?'<span class="flavor-label">Lore</span>':''}<p${lore?' class="flavor-text"':''}>${esc(description)}</p>`:''}${flavor&&flavor!==description?`<span class="flavor-label">Flavor text</span><p class="flavor-text">${esc(flavor)}</p>`:''}${r.category==='talents'?`<a class="primary-link" href="#planner?node=${r.id}">Inspect in Talent Atlas →</a>`:''}</div></div>${r.category==='enemies'?block('Combat properties',facts(statValues,true)):''}${d.class_passive?block(title(d.class_passive.id),`<p>${esc(d.class_passive.description)}</p>`):''}${block('Specialization bonuses',bonuses)}${d.level_scaling?block('Per rank',facts(d.level_scaling,true)):''}${r.progression?block('Along the descent',`<p>Dungeon ${esc(r.progression.ordinal)} of ${catalog.dungeon_sequence?.length||22}.</p><nav class="descent-links" aria-label="Dungeon sequence">${r.progression.previous_id?referenceCard(r.progression.previous_id):''}${r.progression.next_id?referenceCard(r.progression.next_id):''}</nav>`):''}${ability?block('Timing and damage','<p>Damage multipliers describe attack inputs; defenses affect final damage. Logical ticks last 0.5 seconds. Action-meter telegraphs depend on enemy speed.</p>'):''}${r.mechanics?block('Crafting operation',`<p>${esc(r.mechanics.description)}</p>${r.mechanics.limitations?`<p class="eligibility-note">${esc(r.mechanics.limitations)}</p>`:''}<a class="text-link" href="#crafting">Compare currency operations →</a>`):''}${links}</div></div>`;
+  $('detail-body').innerHTML=`<div class="detail-topline"><a href="#${r.category}">${esc(categories[r.category][0])}</a><span>/</span>${esc(r.name)}</div><div class="detail-layout${sidebar?'':' text-only-detail'}">${sidebar?'<aside class="detail-sidebar">'+sidebar+'</aside>':''}<div class="detail-main"><div class="detail-top text-detail"><div><p class="eyebrow">${esc(categories[r.category][0])}${ultimateLabel(r)?' / '+esc(ultimateLabel(r)):''}${r.tier?' / TIER '+roman[r.tier]:''}</p><h2 id="detail-title">${esc(r.name)}</h2>${description?`${lore?'<span class="flavor-label">Lore</span>':''}<p${lore?' class="flavor-text"':''}>${esc(description)}</p>`:''}${flavor&&flavor!==description?`<span class="flavor-label">Flavor text</span><p class="flavor-text">${esc(flavor)}</p>`:''}${r.category==='talents'?`<a class="primary-link" href="#planner?node=${r.id}">Inspect in Talent Atlas →</a>`:''}</div></div>${r.category==='enemies'?block('Combat properties',facts(statValues,true)):''}${d.class_passive?block(title(d.class_passive.id),`<p>${esc(d.class_passive.description)}</p>`):''}${block('Specialization bonuses',bonuses)}${r.category==='skills'?skillProgression(r):d.level_scaling?block('Per rank',facts(d.level_scaling,true)):''}${r.progression?block('Along the descent',`<p>Dungeon ${esc(r.progression.ordinal)} of ${catalog.dungeon_sequence?.length||22}.</p><nav class="descent-links" aria-label="Dungeon sequence">${r.progression.previous_id?referenceCard(r.progression.previous_id):''}${r.progression.next_id?referenceCard(r.progression.next_id):''}</nav>`):''}${ability?block('Timing and damage','<p>Damage multipliers describe attack inputs; defenses affect final damage. Logical ticks last 0.5 seconds. Action-meter telegraphs depend on enemy speed.</p>'):''}${r.mechanics?block('Crafting operation',`<p>${esc(r.mechanics.description)}</p>${r.mechanics.limitations?`<p class="eligibility-note">${esc(r.mechanics.limitations)}</p>`:''}<a class="text-link" href="#crafting">Compare currency operations →</a>`):''}${links}</div></div>`;
   $('detail-body').querySelectorAll('.link-filter').forEach(input=>input.oninput=()=>input.closest('section').querySelectorAll('.reference-list a').forEach(a=>a.hidden=!a.textContent.toLowerCase().includes(input.value.toLowerCase())));document.title=`${r.name} — No Name Below`;if(!$('detail').open){returnFocus=document.activeElement;$('detail').showModal();}$('detail').scrollTop=0;watchCombatSprites();
 }
 function chapterShell(key,description){current=key;$('library').hidden=false;$('showcase').hidden=true;$('planner').hidden=true;$('collection-tools').hidden=true;$('cards').hidden=true;$('more').hidden=true;$('chapter').hidden=false;$('section-title').textContent=chapters[key][0];$('section-kicker').textContent=chapters[key][1];$('section-description').textContent=description;$('section-art').innerHTML='';markCollection(key);document.title=`${chapters[key][0]} — No Name Below`;}
@@ -200,14 +232,35 @@ function showArmory(){
 }
 function renderGallery(){
   const filter=$('kind').value,tier=$('tier').value,q=$('search').value.trim().toLowerCase();
+  const gallery=$('tier-gallery'),key=JSON.stringify([filter,tier,q]);
+  cancelAnimationFrame(renderGallery.pending);renderGallery.pending=null;
+  if(renderGallery.view?.catalog===catalog&&renderGallery.view.key===key&&renderGallery.view.complete){
+    $('result-count').textContent=renderGallery.view.count.toLocaleString()+' pieces';return;
+  }
+  if(renderGallery.cache?.catalog!==catalog)renderGallery.cache={catalog,cards:new Map()};
   const rows=catalog.records.filter(r=>r.category==='items'&&r.data.slot&&r.tier&&primary(r)&&(!filter||kind(r)===filter)&&(!tier||String(r.tier)===tier)&&(!q||r.search.includes(q)));
   $('result-count').textContent=rows.length.toLocaleString()+' pieces';
-  $('tier-gallery').innerHTML=roman.slice(1).map((name,i)=>{
+  const tiers=roman.slice(1).map((name,i)=>{
     const items=rows.filter(r=>r.tier===i+1).sort((a,b)=>kind(a).localeCompare(kind(b))||a.name.localeCompare(b.name));
-    if(!items.length)return '';
-    const label=items.find(r=>r.data.tier_label)?.data.tier_label||'Tier '+name;
-    return `<section class="tier-section" id="gallery-tier-${i+1}"><div class="tier-heading"><span class="roman">${name}</span><div><p class="eyebrow">EQUIPMENT / TIER ${name}</p><h2>${esc(label)}</h2><p>${items.length} pieces in this collection</p></div></div><div class="gallery-grid">${items.map(r=>card(r,true)).join('')}</div></section>`;
-  }).join('')||'<p class="empty"><strong>No equipment matches.</strong>Try another name, tier, or equipment type.</p>';
+    return {name,tier:i+1,items};
+  }).filter(group=>group.items.length);
+  const view=renderGallery.view={catalog,key,count:rows.length,complete:false};
+  gallery.replaceChildren();gallery.setAttribute('aria-busy','true');
+  if(!tiers.length){gallery.innerHTML='<p class="empty"><strong>No equipment matches.</strong>Try another name, tier, or equipment type.</p>';view.complete=true;gallery.removeAttribute('aria-busy');return;}
+  let index=0;
+  function appendTier(){
+    renderGallery.pending=null;
+    if(renderGallery.view!==view)return;
+    if(activeRoute!=='items'){gallery.removeAttribute('aria-busy');return;}
+    const {name,tier,items}=tiers[index++],label=items.find(r=>r.data.tier_label)?.data.tier_label||'Tier '+name;
+    const cards=items.map(r=>{if(!renderGallery.cache.cards.has(r.id))renderGallery.cache.cards.set(r.id,card(r,true));return renderGallery.cache.cards.get(r.id);}).join('');
+    gallery.insertAdjacentHTML('beforeend',`<section class="tier-section" id="gallery-tier-${tier}"><div class="tier-heading"><span class="roman">${name}</span><div><p class="eyebrow">EQUIPMENT / TIER ${name}</p><h2>${esc(label)}</h2><p>${items.length} pieces in this collection</p></div></div><div class="gallery-grid">${cards}</div></section>`);
+    // Finite tier batches let the first equipment become usable before all
+    // 566 cards are parsed; hidden routes never keep rebuilding the gallery.
+    if(index<tiers.length)renderGallery.pending=requestAnimationFrame(appendTier);
+    else {view.complete=true;gallery.removeAttribute('aria-busy');}
+  }
+  appendTier();
 }
 function route(){
   $('error').hidden=true;let hash;try{hash=location.hash.slice(1);decodeURIComponent(hash);}catch{$('error').textContent='This link could not be read. Choose a collection to continue.';$('error').hidden=false;return;}

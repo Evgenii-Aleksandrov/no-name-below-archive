@@ -14,8 +14,8 @@
     return Array.from({ length: 14 }, (_, i) => {
       const depth = [ .66, 1, .82, 1.2 ][i % 4];
       const size = Math.round(base * depth);
-      return { size, y: height * (.09 + (i * 5 % 14) / 14 * .83) - size / 2,
-        drift: (i % 2 ? -1 : 1) * height * .055, delay: (i * 3 % 14) / 13 * .18,
+      return { size, y: height * (.03 + (i * 5 % 14) / 13 * .94) - size / 2,
+        drift: (i % 2 ? -1 : 1) * height * .025, delay: (i * 3 % 14) / 13 * .08,
         opacity: depth < .8 ? .64 : .94, layer: Math.round(depth * 10) };
     });
   }
@@ -35,36 +35,46 @@
 
   function revealFrames(rect, width, height, direction = 1, starts = []) {
     const flights = layout(width, height).map((flight, i) => {
-      const rows = frames(width, flight.size, direction, flight.drift, flight.opacity).orb;
-      if (starts[i]) rows[0] = starts[i];
+      const start = direction > 0 ? -flight.size * 2 : width + flight.size;
+      const end = direction > 0 ? width + flight.size : -flight.size * 2;
+      const rows = [0, .14, .48, .82, 1].map(offset => ({ offset, x: start + (end - start) * offset }));
+      if (starts[i]) rows[0].x = new DOMMatrixReadOnly(starts[i].transform).m41;
       return { ...flight, delay: starts.length ? 0 : flight.delay,
-        rows: rows.map(row => ({ offset: row.offset, matrix: new DOMMatrixReadOnly(row.transform) })) };
+        rows };
     });
     // Keep the same piecewise-linear translation clock as the actual orb poses.
-    const times = [...new Set([0, 1, ...flights.flatMap(flight => flight.rows.map(row =>
-      Math.min(1, flight.delay + row.offset * .82)))])].sort((a, b) => a - b);
-    return times.map(time => {
-      const bands = flights.map(flight => {
+    const times = new Set([0, 1]);
+    for (const flight of flights) {
+      const tail = direction > 0 ? -flight.size * .25 : flight.size * 1.25;
+      flight.rows.forEach((row, i) => {
+        times.add(Math.min(1, flight.delay + row.offset * .82));
+        if (!i) return;
+        const previous = flight.rows[i - 1];
+        // A clamped edge needs its own keyframe: otherwise interpolation
+        // starts revealing before the last orb reaches this host's boundary.
+        for (const edge of [rect.left, rect.left + rect.width]) {
+          const p = (edge - tail - previous.x) / (row.x - previous.x);
+          if (p > 0 && p < 1) times.add(flight.delay +
+            (previous.offset + (row.offset - previous.offset) * p) * .82);
+        }
+      });
+    }
+    return [...times].sort((a, b) => a - b).map(time => {
+      const tails = flights.map(flight => {
         const phase = clamp((time - flight.delay) / .82, 0, 1);
         const next = flight.rows.findIndex(row => row.offset >= phase);
         const b = flight.rows[Math.max(0, next)], a = flight.rows[Math.max(0, next - 1)];
         const p = b.offset > a.offset ? (phase - a.offset) / (b.offset - a.offset) : 0;
-        const x = a.matrix.m41 + (b.matrix.m41 - a.matrix.m41) * p;
-        const y = a.matrix.m42 + (b.matrix.m42 - a.matrix.m42) * p;
+        const x = a.x + (b.x - a.x) * p;
         // Reveal behind the entire rotating sprite, rather than its leading edge.
-        const tail = x + (direction > 0 ? -flight.size * .25 : flight.size * 1.25);
-        return { y: flight.y + flight.size / 2 + y,
-          x: clamp(tail - rect.left, 0, rect.width) };
-      }).sort((a, b) => a.y - b.y);
-      const edge = direction > 0 ? 0 : rect.width;
-      const points = [[edge, 0]];
-      bands.forEach((band, i) => {
-        const top = i ? clamp((bands[i - 1].y + band.y) / 2 - rect.top, 0, rect.height) : 0;
-        const bottom = i + 1 < bands.length ? clamp((band.y + bands[i + 1].y) / 2 - rect.top, 0, rect.height) : rect.height;
-        points.push([band.x, top], [band.x, bottom]);
+        return x + (direction > 0 ? -flight.size * .25 : flight.size * 1.25);
       });
-      points.push([edge, rect.height]);
-      return { clipPath: `polygon(${points.map(([x, y]) => `${x.toFixed(2)}px ${y.toFixed(2)}px`).join(',')})`, offset: time };
+      // One full-height native clip follows the last orb, so no destination
+      // region appears ahead of the passage and no row-shaped holes are cut.
+      const tail = direction > 0 ? Math.min(...tails) : Math.max(...tails);
+      const frontier = clamp(tail - rect.left, 0, rect.width);
+      return { clipPath: direction > 0 ? `inset(0px ${(rect.width - frontier).toFixed(2)}px 0px 0px)` :
+        `inset(0px 0px 0px ${frontier.toFixed(2)}px)`, offset: time };
     });
   }
 
@@ -123,6 +133,7 @@
     if (!state) return;
     cancel('destroy');
     window.removeEventListener('resize', resized);
+    window.visualViewport?.removeEventListener('resize', resized);
     document.removeEventListener('visibilitychange', visibilityChanged);
     state.media.removeEventListener('change', motionChanged);
     state.overlay.remove();
@@ -158,6 +169,7 @@
     }
     media.addEventListener('change', motionChanged);
     window.addEventListener('resize', resized, { passive: true });
+    window.visualViewport?.addEventListener('resize', resized, { passive: true });
     document.addEventListener('visibilitychange', visibilityChanged);
     emit('ready', { nativeScroll: false });
     return window.NNBOrbMotion;
@@ -186,8 +198,11 @@
     }
     const requested = owner.routeTextures[id] || owner.defaultSrc;
     const palette = [...new Set([requested, ...loaded])].filter(src => owner.textures.get(src)?.loaded);
-    const choreography = layout(innerWidth, innerHeight);
     owner.overlay.hidden = false;
+    // The mobile browser's dynamic viewport can be shorter than innerHeight.
+    // Measure the actual fixed overlay used by the sprites and reveal together.
+    const viewport = owner.overlay.getBoundingClientRect();
+    const choreography = layout(viewport.width, viewport.height);
     choreography.forEach((flight, i) => {
       let token = owner.tokens[i];
       if (!token) {
@@ -204,7 +219,7 @@
       }
       Object.assign(token.style, { top: flight.y + 'px', width: flight.size + 'px', height: flight.size + 'px', zIndex: flight.layer });
       token.style.setProperty('--nnb-orb-direction', direction);
-      const rows = frames(innerWidth, flight.size, direction, flight.drift, flight.opacity).orb;
+      const rows = frames(viewport.width, flight.size, direction, flight.drift, flight.opacity).orb;
       if (poses[i]) rows[0] = poses[i];
       owner.animations.push(token.animate(rows, {
         duration: owner.duration * .82, delay: poses.length ? 0 : owner.duration * flight.delay,
@@ -218,7 +233,9 @@
     const host = typeof owner.contentHost === 'function' ? owner.contentHost(id) : owner.contentHost;
     const content = resolve(host);
     if (content?.animate) {
-      const reveal = revealFrames(content.getBoundingClientRect(), innerWidth, innerHeight, direction, poses);
+      const rect = content.getBoundingClientRect();
+      const reveal = revealFrames({ left: rect.left - viewport.left, width: rect.width },
+        viewport.width, viewport.height, direction, poses);
       owner.animations.push(content.animate(reveal, { duration: owner.duration, easing: 'linear', fill: 'both' }));
     }
     clock.onfinish = () => {

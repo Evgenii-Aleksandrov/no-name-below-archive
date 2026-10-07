@@ -1,4 +1,4 @@
-.nnb-orb-overlay{position:fixed;inset:0;z-index:120;overflow:hidden;pointer-events:none;user-select:none;contain:strict;isolation:isolate}
+.nnb-orb-overlay{position:fixed;inset:0;height:100vh;height:100dvh;z-index:120;overflow:hidden;pointer-events:none;user-select:none;contain:strict;isolation:isolate}
 .nnb-orb-overlay[hidden]{display:none}
 .nnb-orb-veil{position:absolute;inset:0;opacity:0;background:radial-gradient(ellipse at 52% 48%,#c7b98a24,transparent 64%),linear-gradient(90deg,#10170f00,#18201880 48%,#10170f00);pointer-events:none}
 .nnb-orb-token{position:absolute;left:0;top:0;pointer-events:none;opacity:0;transform-origin:center;will-change:transform,opacity}

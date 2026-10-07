@@ -244,6 +244,7 @@ dialog::backdrop{background:#050907d9;backdrop-filter:blur(7px)}
 .roman{font:50px var(--heading);color:#cfb174;min-width:80px}
 .tier-heading h2{font-size:27px;color:#f0d7a4}.tier-heading p{font:17px var(--body);margin:5px 0 0;color:#acb69f}
 .gallery-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+.gallery-grid .card{content-visibility:auto;contain-intrinsic-block-size:auto 210px}
 .gallery-grid .card-art{height:135px}.gallery-grid .card-art img{max-height:120px}
 .gallery-grid h3{font-size:12px}.gallery-grid .card-body{padding:12px}.gallery-grid .card-meta{font-size:8px}
 #showcase footer{display:flex;justify-content:space-between;padding:25px 4vw;font:12px var(--heading);color:var(--gold)}
@@ -264,7 +265,7 @@ body:has(#showcase:not([hidden])) .library-footer{display:none}
 #atlas-status[data-loading="false"]{inset:auto 12px 45px;font-size:14px;background:#07101de8;padding:8px 12px;border:1px solid #75633d}
 #atlas-stage[data-reference-loading="true"]{background:#070b13 url('assets/talent-atlas-preview.webp') center/contain no-repeat}
 .atlas-hint{position:absolute;bottom:10px;left:12px;pointer-events:none;font:11px Georgia;background:#08121cdd;border:1px solid #b69b5b33;padding:7px 12px;margin:0;color:#d4caa6}
-.planner-panel{background:#141f16;border-left:1px solid var(--line);max-height:740px}
+.planner-panel{background:#141f16;border-top:1px solid var(--line)}
 .planner-help{margin:22px 4vw 30px;max-width:800px;border:1px solid var(--line);padding:14px 20px;background:#131d14}
 .planner-help summary{cursor:pointer;min-height:30px;font:13px var(--heading);color:#dfca93}
 .planner-help h3{font-size:17px;margin:20px 0 8px}.planner-help p{font:19px var(--body);color:#c3ceb4}
@@ -306,12 +307,11 @@ body:has(#showcase:not([hidden])) .library-footer{display:none}
 @media(prefers-contrast:more){:root{--muted:#d3dbc4;--line:#b9b98d88}.facts dt{color:#d6dfc6}.card{border-color:#9d9f75}.card p{color:#d4ddc6}}
 
 /* Direct Atlas choices: stable map geometry, controls above, compact node context. */
-.planner-picker{display:grid;grid-template-columns:minmax(150px,1fr) 170px minmax(190px,1.4fr) auto;gap:14px;align-items:end;padding:16px 4vw;background:#111922;border-bottom:1px solid #665b45}
+.planner-picker{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;padding:16px 4vw;background:#111922;border-bottom:1px solid #665b45}
 .planner-picker label{display:flex;flex-direction:column;gap:7px;min-width:0;font-size:12px;color:#e0cc9d}
-.planner-picker input,.planner-picker select,.planner-picker #plan-node{width:100%;height:44px;min-height:44px;margin:0;font-size:14px}
-.planner-node-actions{display:flex;gap:8px}.planner-node-actions button{min-height:44px;white-space:nowrap}
+.planner-picker input{width:100%;height:44px;min-height:44px;margin:0;font-size:14px}
 .planner-import{grid-column:1/-1;margin:0;color:#e1ca98;font-size:13px}.planner-import:empty{display:none}
-.planner-layout{grid-template-columns:minmax(0,1fr) 250px}.planner-panel{padding:18px;overflow:auto}
+.planner-layout{grid-template-columns:minmax(0,1fr)}.planner-panel{padding:18px 4vw}
 .planner-panel .build-summary{margin:0}.build-summary summary{font:15px Cinzel;line-height:1.4;cursor:pointer}
 .build-summary summary small{display:block;font:12px ArchiveProse,Georgia;color:#bdb79f;margin:4px 0 12px}
 #plan-summary .summary-row{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #665b4538;font-size:14px}
@@ -327,15 +327,10 @@ body:has(#showcase:not([hidden])) .library-footer{display:none}
 #plan-popup-close{position:absolute;right:4px;top:4px;width:36px;height:36px;min-height:36px;padding:0;font-size:23px;background:transparent;border-color:transparent}
 .node-popup-details{display:inline-flex;align-items:center;min-height:36px;font:12px Cinzel;color:#e8c77d;text-decoration:underline;text-underline-offset:3px}
 #atlas:focus-visible{outline:2px solid #f0d48d;outline-offset:-3px}
-@media(max-width:1000px){.planner-picker{grid-template-columns:minmax(130px,1fr) minmax(120px,.75fr);gap:12px}.planner-node{grid-column:1}.planner-node-actions{grid-column:2}.planner-layout{grid-template-columns:minmax(0,1fr) 210px}}
 @media(max-width:600px){
- .planner-picker{padding:14px 22px 14px 42px;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
- .planner-search{grid-column:1/-1}.planner-picker .planner-node{grid-column:auto}.planner-node-actions{grid-column:1/-1}.planner-node-actions button{flex:1;font-size:12px;padding:8px}
- .planner-picker input,.planner-picker select,.planner-picker #plan-node{font-size:16px;height:44px;min-height:44px}
- .planner-layout{display:flex;flex-direction:column}.planner-panel{order:-1;height:106px;max-height:106px;padding:10px 22px 10px 42px;border-left:0;border-bottom:1px solid #665b45;overflow:hidden}
- .planner-panel .build-summary{height:86px}.build-summary summary small{display:inline;font-size:12px;margin:0 0 0 8px}
- #plan-summary{max-height:57px;overflow:auto;margin-top:4px;overscroll-behavior:contain}
- #plan-summary .summary-row{padding:3px 0;font-size:14px}.summary-empty{margin:7px 0}
+ .planner-picker{padding:14px 18px;gap:10px}
+ .planner-picker input{font-size:16px}
+ .planner-panel{padding:18px}.summary-empty{margin:7px 0}
  #plan-popup-close{width:44px;height:44px;min-height:44px}
  .node-popup-details{min-height:44px}#plan-selection .node-popup-heading{padding-right:36px}
 }
@@ -343,12 +338,7 @@ body:has(#showcase:not([hidden])) .library-footer{display:none}
 #plan-selection .node-popup-heading .node-popup-details{font:inherit;color:inherit;min-height:36px;text-decoration:underline;text-decoration-color:#b69a60;text-underline-offset:3px}
 @media(max-width:600px){#plan-selection.node-popup{width:230px;padding:12px}#plan-selection .node-popup-heading .node-popup-details{min-height:44px}}
 
-/* Retire the old inspector's full-width picker labels without changing IDs. */
-.planner-picker label,.planner-picker input,.planner-picker #plan-node{grid-column:auto}
 .planner-panel .build-summary summary{padding:0}
-@media(max-width:600px){.planner-picker .planner-search{grid-column:1/-1}}
-
-@media(max-width:600px){.planner-picker{padding-left:18px}.planner-panel{padding-left:18px}.planner-layout{display:flex}.planner-picker .planner-search{grid-column:1/-1}}
 
 /* The entrance is a menu; the Armory is the single tier collection. */
 .at-home .library-footer{display:none}
@@ -446,3 +436,7 @@ body:has(#content #showcase:not([hidden])) .library-footer{display:flex}
  #content .gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
  #content .tier-heading{gap:16px;margin-bottom:16px}
 }
+
+/* Level totals and newly gained player-skill bonuses. */
+.skill-levels{width:100%;table-layout:fixed;border-collapse:collapse;font-size:15px}.skill-levels th,.skill-levels td{padding:12px 8px;vertical-align:top;border-bottom:1px solid var(--line);overflow-wrap:anywhere}.skill-levels th:first-child{width:56px}.skill-levels .metric-grid{display:block;margin:0}.skill-levels .metric{padding:5px 0}.skill-levels .metric dt,.skill-levels .metric dd{margin:0}.skill-levels .metric dd{font-size:15px}.skill-unlocks{padding:0;list-style:none;margin:0}.skill-unlocks>li+li{margin-top:12px}.skill-level-note{font-size:16px}.skill-levels td>p{margin:0;font-size:15px}
+@media(max-width:600px){.skill-levels thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}.skill-levels tbody{display:block}.skill-levels tr{display:grid;grid-template-columns:40px minmax(0,1fr)}.skill-levels th:first-child{width:auto;grid-row:span 2}.skill-levels td{grid-column:2}.skill-levels td::before{content:attr(data-label);display:block;color:var(--gold);font:11px Cinzel;margin-bottom:8px}}

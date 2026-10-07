@@ -39,14 +39,13 @@
   <div class="planner-heading"><div><p class="eyebrow">BUILD YOUR PATH</p><h1 id="planner-title">The Talent Atlas</h1><p>Every choice begins with a connection. Inspect, allocate and share your path.</p></div><a href="#talents" class="text-link">Browse the talent reference →</a></div>
   <div class="planner-toolbar"><label>Class <select id="plan-class"><option value="warrior_center">Warrior</option><option value="mage_center">Mage</option><option value="rogue_center">Rogue</option><option value="cleric_center">Cleric</option></select></label><button id="plan-fit">Full atlas</button><button id="plan-focus">Class origin</button><button id="plan-zoom-in" aria-label="Zoom in">+</button><button id="plan-zoom-out" aria-label="Zoom out">−</button><button id="plan-undo">Undo</button><button id="plan-reset">Reset</button><button id="plan-share" class="primary-link">Copy build link</button><span id="plan-count" role="status"></span></div>
   <div class="planner-picker">
-    <label class="planner-search">Find a talent<input id="plan-search" type="search" placeholder="Name or effect" autocomplete="off"></label>
-    <label>Paths<select id="plan-view"><option value="available">Available paths</option><option value="build">Your build</option><option value="all">All talents</option></select></label>
-    <label class="planner-node">Talent<select id="plan-node"></select></label>
-    <div class="planner-node-actions"><button id="plan-allocate" aria-describedby="plan-message">Allocate talent</button><button id="plan-locate">Locate</button></div>
+    <label class="planner-search"><span class="sr-only">Search talent effects</span><input id="plan-search" type="search" placeholder="Search effects…" autocomplete="off" aria-controls="atlas" aria-describedby="plan-search-help plan-search-status"></label>
+    <p id="plan-search-help" class="sr-only">Matching effects are highlighted on the atlas. Press Enter in search to inspect the next match. Press Enter or Space on the atlas to allocate or remove the selected talent.</p>
+    <p id="plan-search-status" class="sr-only" role="status" aria-live="polite"></p>
     <p id="plan-message" class="sr-only" role="status" aria-live="polite"></p><p id="plan-import-message" class="planner-import" role="status" aria-live="polite"></p>
   </div>
   <div class="planner-layout">
-    <div id="atlas-stage"><p id="atlas-status" role="status"></p><canvas id="atlas" tabindex="0" aria-label="Talent atlas. Click or tap an available talent to allocate it; tap a removable talent to remove it. Keyboard users can use the selector and action above the map."></canvas><div id="plan-selection" class="node-popup" role="region" aria-labelledby="plan-node-title" hidden></div><p id="atlas-hint" class="atlas-hint">Drag to explore / Scroll to zoom / Click to allocate</p></div>
+    <div id="atlas-stage"><p id="atlas-status" role="status"></p><canvas id="atlas" tabindex="0" aria-label="Talent atlas. Click or tap an available talent to allocate it; tap a removable talent to remove it. Search effects to select a talent, then press Enter or Space here to allocate or remove it." aria-describedby="plan-message"></canvas><div id="plan-selection" class="node-popup" role="region" aria-labelledby="plan-node-title" hidden></div><p id="atlas-hint" class="atlas-hint">Drag to explore / Scroll to zoom / Click to allocate</p></div>
     <aside class="planner-panel"><details class="build-summary" open><summary>Build bonuses <small>Additive inputs</small></summary><div id="plan-summary"></div></details></aside>
   </div>
   <details class="planner-help"><summary>How to read your plan</summary><div id="planner-help"></div></details>
