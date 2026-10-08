@@ -266,7 +266,10 @@ function route(){
   $('error').hidden=true;let hash;try{hash=location.hash.slice(1);decodeURIComponent(hash);}catch{$('error').textContent='This link could not be read. Choose a collection to continue.';$('error').hidden=false;return;}
   if(hash==='showcase'){history.replaceState(null,'',location.pathname+location.search+'#items');hash='items';}
   if(hash.startsWith('entry/')){const id=decodeURIComponent(hash.slice(6));if(byId.has(id))window.libraryPlanner.deactivate();if(!activeRoute&&byId.has(id)){activeRoute=byId.get(id).category;detailReturn=activeRoute;$('home').hidden=true;showCategory(activeRoute);}if(!$('planner').hidden)detailReturn='planner?node='+window.libraryPlanner.getState().selected;clearSceneMotion();showEntry(id);return;}
-  const previous=activeRoute,returning=$('detail').open&&hash===detailReturn;activeRoute=hash.split('?')[0]||'home';detailReturn=hash||'home';if($('detail').open){$('detail').close();if(returnFocus?.isConnected)returnFocus.focus({preventScroll:true});}
+  const previous=activeRoute,returning=$('detail').open&&hash===detailReturn,next=hash.split('?')[0]||'home';
+  // Capture the outgoing view before changing its DOM, visibility or scroll.
+  if(previous&&previous!==next)window.NNBOrbMotion?.prepare?.();
+  activeRoute=next;detailReturn=hash||'home';if($('detail').open){$('detail').close();if(returnFocus?.isConnected)returnFocus.focus({preventScroll:true});}
   // Retain the exact search/filter context and focused result when closing a detail.
   if(returning&&previous===activeRoute&&activeRoute!=='planner'){document.title=(activeRoute==='home'?'The Descent Archive':activeRoute==='items'?'Armory':categories[activeRoute]?.[0]||chapters[activeRoute]?.[0]||'The Descent Archive')+' — No Name Below';watchCombatSprites();return;}
   clearSceneMotion();window.libraryPlanner.deactivate();$('bestiary-feature').hidden=activeRoute!=='enemies';
