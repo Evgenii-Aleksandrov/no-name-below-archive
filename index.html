@@ -6,7 +6,7 @@
   <meta name="description" content="Explore the classes, skills, creatures and equipment of No Name Below. Plan your path through the Talent Atlas.">
   <link rel="icon" href="engine/idle-game-engine/assets/branding/app_icon.png">
   <link rel="stylesheet" href="style.css"><link rel="stylesheet" href="motion/orb-motion.css"><link rel="stylesheet" href="motion/section-treatment.css">
-  <script src="planner.js" defer></script><script src="motion/orb-motion.js" defer></script><script src="app.js" defer></script>
+  <script src="i18n.js" defer></script><script src="planner.js" defer></script><script src="motion/orb-motion.js" defer></script><script src="app.js" defer></script>
 </head>
 <body>
 <a class="skip" href="#content">Skip to archive</a>
@@ -15,6 +15,7 @@
   <button id="nav-toggle" class="nav-toggle" aria-expanded="false" aria-controls="main-nav">Browse <span aria-hidden="true">☰</span></button>
   <nav id="main-nav" aria-label="View"><a href="#items">Armory</a><a href="#planner">Talent Atlas</a><a href="#enemies">Bestiary</a><a href="#crafting">Crafting</a><a href="#mechanics">Mechanics</a></nav>
   <form id="global-search" class="global-search" role="search"><label class="sr-only" for="global-query">Search every collection</label><input id="global-query" type="search" placeholder="Search the archive…" autocomplete="off"><button aria-label="Search every collection">⌕</button></form>
+  <label class="language-picker"><span class="sr-only">Language</span><select id="site-language" aria-label="Language"><option value="en" lang="en">English</option><option value="ru" lang="ru">Русский</option><option value="zh-CN" lang="zh-Hans">简体中文</option></select></label>
 </header>
 <div id="orb-section-crest" aria-hidden="true"><div id="orb-route-host"></div><div id="orb-scroll-host"></div></div>
 <main id="home" class="home-menu" aria-label="Main menu">

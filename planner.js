@@ -4,7 +4,7 @@
 function setupPlanner(catalog, byId, statText, esc) {
   const el=id=>document.getElementById(id), canvas=el('atlas'), ctx=canvas.getContext('2d');
   const nodes=catalog.records.filter(r=>r.category==='talents'), map=new Map(nodes.map(r=>[r.id,r]));
-  const effects=new Map(nodes.map(r=>[r.id,[...(!r.id.endsWith('_center')&&r.description?[r.description]:[]),...Object.entries(r.data.passive_effects||{}).map(([k,v])=>statText(k,v).join(': ')),...(r.data.grants_skill_id?['Grants '+(byId.get(r.data.grants_skill_id)?.name||r.data.grants_skill_id),byId.get(r.data.grants_skill_id)?.description||'']:[])].filter(Boolean).join(' / ')]));
+  const effects=new Map(nodes.map(r=>[r.id,[r.englishEffects||'',...(!r.id.endsWith('_center')&&r.description?[r.description]:[]),...Object.entries(r.data.passive_effects||{}).map(([k,v])=>statText(k,v).join(': ')),...(r.data.grants_skill_id?[t('Grants')+' '+(byId.get(r.data.grants_skill_id)?.name||r.data.grants_skill_id),byId.get(r.data.grants_skill_id)?.description||'']:[])].filter(Boolean).join(' / ')]));
   let origin='warrior_center', selected=origin, allocated=new Set([origin]), history=[], zoom=.8, pan={x:0,y:0}, drag=null, searchCursor=-1;
   let pendingShareHash='',opening=false,imageFrame=0,viewWidth=0,viewHeight=0,dpr=1,atlas=null,atlasPromise=null,artwork=null,detailPromise=null,pendingView=null;
   const ART='engine/idle-game-engine/assets/talent_tree/', WEB_ART='assets/';
@@ -13,7 +13,7 @@ function setupPlanner(catalog, byId, statText, esc) {
   const ownedFetches=new Set(),events=new AbortController(),ignoredPointers=new Set();
   let active=false,disposed=false,activation=0,coordinatesPromise=null,previewPromise=null,viewIntent={kind:'fit',pending:true};
   function current(ticket){return !disposed&&active&&ticket===activation&&!el('planner').hidden&&!el('detail').open;}
-  function statusFor(ticket,text,loading=false){if(!current(ticket))return;const status=el('atlas-status');status.textContent=text;status.dataset.loading=String(loading);}
+  function statusFor(ticket,text,loading=false){if(!current(ticket))return;const status=el('atlas-status');status.textContent=t(text);status.dataset.loading=String(loading);}
   async function ownedBytes(src){
     if(disposed)throw new DOMException('Planner disposed','AbortError');
     const controller=new AbortController();ownedFetches.add(controller);
@@ -59,7 +59,7 @@ function setupPlanner(catalog, byId, statText, esc) {
   }
   function loadPreview(){
     if(artwork)return Promise.resolve();
-    if(!previewPromise)previewPromise=loadBitmap(WEB_ART+'talent-atlas-preview.webp').then(image=>{if(!artwork||artwork.naturalWidth<image.naturalWidth)artwork=image;}).catch(async()=>{if(!await loadDetail())throw Error('Atlas images unavailable');}).finally(()=>{previewPromise=null;});
+    if(!previewPromise)previewPromise=loadBitmap(WEB_ART+'talent-atlas-preview.webp').then(image=>{if(!artwork||artwork.naturalWidth<image.naturalWidth)artwork=image;}).catch(async error=>{if(error.name==='AbortError')throw error;if(!await loadDetail())throw Error('Atlas images unavailable');}).finally(()=>{previewPromise=null;});
     return previewPromise;
   }
   function loadImages(){
@@ -80,17 +80,18 @@ function setupPlanner(catalog, byId, statText, esc) {
     const held=[...pointers.keys()];held.forEach(id=>ignoredPointers.add(id));pointers.clear();drag=null;pinch=null;pressed=null;draw();
     for(const id of held)if(canvas.hasPointerCapture(id))canvas.releasePointerCapture(id);
   }
-  function deactivate(){
+  function deactivate(cancelFetches=false){
     active=false;activation++;pendingView=null;closePopup();
     if(imageFrame){cancelAnimationFrame(imageFrame);imageFrame=0;}
     cancelGesture();
+    if(cancelFetches===true)for(const controller of ownedFetches)controller.abort();
   }
   function activate(){
     if(disposed)return false;
     if(!active){active=true;activation++;resize();if(!atlas||viewIntent.pending)pendingView={...viewIntent,ticket:activation};}
     loadImages();draw();return true;
   }
-  function dispose(){deactivate();disposed=true;for(const controller of ownedFetches)controller.abort();events.abort();ignoredPointers.clear();atlas=null;artwork=null;}
+  function dispose(){deactivate(true);disposed=true;events.abort();ignoredPointers.clear();atlas=null;artwork=null;}
   function chained(id,set){
     const d=map.get(id)?.data;if(!d)return false;
     if(d.entry_origin&&set.has(d.entry_origin))return true;
@@ -104,7 +105,7 @@ function setupPlanner(catalog, byId, statText, esc) {
     return reached;
   }
   function load(ids){allocated=reachable((ids||[]).filter(id=>map.has(id)));}
-  function save(){try{localStorage.setItem('nnb-compendium-plan-'+origin,JSON.stringify([...allocated]));}catch{el('plan-message').textContent='Browser storage is unavailable. Use Copy build link to keep this plan.';}}
+  function save(){try{localStorage.setItem('nnb-compendium-plan-'+origin,JSON.stringify([...allocated]));}catch{el('plan-message').textContent=t('Browser storage is unavailable. Use Copy build link to keep this plan.');}}
   function restore(){try{const ids=JSON.parse(localStorage.getItem('nnb-compendium-plan-'+origin)||'[]');if(!Array.isArray(ids)||ids.length>nodes.length||ids.some(id=>typeof id!=='string'))throw Error();load(ids);}catch{allocated=new Set([origin]);}}
   function spent(){return [...allocated].reduce((sum,id)=>sum+(id===origin?0:Number(map.get(id).data.cost??1)),0);}
   function remember(){history.push([...allocated]);if(history.length>50)history.shift();}
@@ -112,10 +113,10 @@ function setupPlanner(catalog, byId, statText, esc) {
     if(!map.has(id)||id===origin)return false;
     if(allocated.has(id)){
       const remaining=[...allocated].filter(x=>x!==id);
-      if(reachable(remaining).size!==remaining.length){el('plan-message').textContent='Remove the end of this path first. Other choices depend on this talent.';return false;}
+      if(reachable(remaining).size!==remaining.length){el('plan-message').textContent=t('Remove the end of this path first. Other choices depend on this talent.');return false;}
       remember();allocated.delete(id);
     }else{
-      if(!chained(id,allocated)){el('plan-message').textContent='Connect this talent to your class origin first.';return false;}
+      if(!chained(id,allocated)){el('plan-message').textContent=t('Connect this talent to your class origin first.');return false;}
       remember();allocated.add(id);
     }
     save();update();return true;
@@ -171,7 +172,7 @@ function setupPlanner(catalog, byId, statText, esc) {
       if(active&&n.id!==origin){ctx.fillStyle='#edcf87';ctx.beginPath();ctx.arc(p.x+r*.75,p.y-r*.75,3,0,Math.PI*2);ctx.fill();}
     }
   }
-  function resize(){if(!current(activation))return;const box=canvas.parentElement.getBoundingClientRect();viewWidth=Math.round(box.width);viewHeight=Math.round(box.height);dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(viewWidth*dpr);canvas.height=Math.round(viewHeight*dpr);el('atlas-hint').textContent=viewWidth<600||matchMedia('(pointer: coarse)').matches?'Drag to pan · Pinch or + / − to zoom · Tap to allocate / remove':'Drag to explore · Scroll to zoom · Click to allocate / remove';draw();}
+  function resize(){if(!current(activation))return;const box=canvas.parentElement.getBoundingClientRect();viewWidth=Math.round(box.width);viewHeight=Math.round(box.height);dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(viewWidth*dpr);canvas.height=Math.round(viewHeight*dpr);el('atlas-hint').textContent=t(viewWidth<600||matchMedia('(pointer: coarse)').matches?'Drag to pan · Pinch or + / − to zoom · Tap to allocate / remove':'Drag to explore · Scroll to zoom · Click to allocate / remove');draw();}
   function fit(){
     if(!current(activation))return;viewIntent={kind:'fit'};resize();if(!atlas){viewIntent.pending=true;pendingView={...viewIntent,ticket:activation};loadImages();return;}pendingView=null;
     const ps=Object.values(atlas.nodes),minX=Math.min(...ps.map(p=>p.x-p.r)),maxX=Math.max(...ps.map(p=>p.x+p.r)),minY=Math.min(...ps.map(p=>p.y-p.r)),maxY=Math.max(...ps.map(p=>p.y+p.r));
@@ -184,9 +185,9 @@ function setupPlanner(catalog, byId, statText, esc) {
 
   function removable(id){return id!==origin&&reachable([...allocated].filter(x=>x!==id)).size===allocated.size-1;}
   function selectionReason(id){
-    if(id===origin)return 'Your class origin is free and fixed.';
-    if(allocated.has(id))return removable(id)?'Allocated. Tap again to remove.':'Other choices depend on this talent. Remove the end of this path first.';
-    return chained(id,allocated)?'Available. Tap to allocate.':'Connect this talent to your class origin first.';
+    if(id===origin)return t('Your class origin is free and fixed.');
+    if(allocated.has(id))return t(removable(id)?'Allocated. Tap again to remove.':'Other choices depend on this talent. Remove the end of this path first.');
+    return t(chained(id,allocated)?'Available. Tap to allocate.':'Connect this talent to your class origin first.');
   }
   function closePopup(){
     const popup=el('plan-selection'),ownsFocus=popup.contains(document.activeElement);
@@ -220,18 +221,18 @@ function setupPlanner(catalog, byId, statText, esc) {
   }
   function update(){
     const r=map.get(selected)||map.get(origin),d=r.data,reason=selectionReason(r.id);
-    el('plan-count').textContent=`${allocated.size-1} talent${allocated.size===2?'':'s'} / ${spent()} point${spent()===1?'':'s'}`;
-    el('plan-selection').innerHTML=`<button id="plan-popup-close" aria-label="Close talent popup">&times;</button><div class="node-popup-heading">${r.image?`<img src="${esc(r.image)}" alt="" width="40" height="40">`:''}<div><p class="node-popup-meta">${esc(d.kind)} / ${d.cost??1} point${(d.cost??1)===1?'':'s'}</p><h2 id="plan-node-title"><a class="node-popup-details" href="#entry/${r.id}" aria-label="${esc(r.name)}: full details">${esc(r.name)}</a></h2></div></div><div class="plan-stats">${Object.entries(d.passive_effects||{}).map(([k,v])=>`<p>${esc(statText(k,v).join(': '))}</p>`).join('')||`<p>${esc(r.description)}</p>`}</div>${d.grants_skill_id?`<p>Grants <a href="#entry/${d.grants_skill_id}">${esc(byId.get(d.grants_skill_id)?.name||d.grants_skill_id)}</a></p>`:''}<p class="node-popup-reason">${esc(reason)}</p>`;
+    el('plan-count').textContent=t('{count} talents / {points} points',{count:displayNumber(allocated.size-1),points:displayNumber(spent())});
+    el('plan-selection').innerHTML=html`<button id="plan-popup-close" aria-label="Close talent popup">&times;</button><div class="node-popup-heading">${r.image?html`<img src="${rawEsc(r.image)}" alt="" width="40" height="40">`:''}<div><p class="node-popup-meta">${esc(title(d.kind))} / ${esc(t('{count} points',{count:displayNumber(d.cost??1)}))}</p><h2 id="plan-node-title"><a class="node-popup-details" href="#entry/${r.id}" aria-label="${esc(t('{name}: full details',{name:r.name}))}">${esc(r.name)}</a></h2></div></div><div class="plan-stats">${Object.entries(d.passive_effects||{}).map(([k,v])=>html`<p>${esc(statText(k,v).join(': '))}</p>`).join('')||html`<p>${esc(r.description)}</p>`}</div>${d.grants_skill_id?html`<p>Grants <a href="#entry/${d.grants_skill_id}">${esc(byId.get(d.grants_skill_id)?.name||d.grants_skill_id)}</a></p>`:''}<p class="node-popup-reason">${esc(reason)}</p>`;
     el('plan-popup-close').onclick=closePopup;
     el('plan-message').textContent=reason;
     const totals={};for(const id of allocated)for(const [k,v] of Object.entries(map.get(id).data.passive_effects||{}))if(typeof v==='number')totals[k]=(totals[k]||0)+v;
-    el('plan-summary').innerHTML=`${Object.entries(totals).map(([k,v])=>{const [label,value]=statText(k,v);return `<div class="summary-row"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`;}).join('')||'<p class="summary-empty">Choose a talent to begin.</p>'}<p class="summary-note">Unlimited planning. Spent costs, not earned points. Additive inputs; equipment and resonance excluded.</p>`;
+    el('plan-summary').innerHTML=html`${Object.entries(totals).map(([k,v])=>{const [label,value]=statText(k,v);return html`<div class="summary-row"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`;}).join('')||'<p class="summary-empty">Choose a talent to begin.</p>'}<p class="summary-note">Unlimited planning. Spent costs, not earned points. Additive inputs; equipment and resonance excluded.</p>`;
     el('plan-undo').disabled=!history.length;options();placePopup();draw();
   }
   function effectMatches(){const q=el('plan-search').value.trim().toLowerCase();return q?nodes.filter(r=>effects.get(r.id).toLowerCase().includes(q)).sort((a,b)=>Number(!chained(a.id,allocated))-Number(!chained(b.id,allocated))):[];}
   function options(){
     const matches=effectMatches();
-    el('plan-search-status').textContent=el('plan-search').value.trim()?(matches.length?`${matches.length} matching talents. Press Enter to inspect the next match.`:'No matching effects.') : '';
+    el('plan-search-status').textContent=el('plan-search').value.trim()?(matches.length?t('{count} matching talents. Press Enter to inspect the next match.',{count:displayNumber(matches.length)}):t('No matching effects.')) : '';
     draw();
   }
   function gesture(){const [a,b]=[...pointers.values()],rect=canvas.getBoundingClientRect();return {distance:Math.hypot(b.x-a.x,b.y-a.y),x:(a.x+b.x)/2-rect.left-viewWidth/2,y:(a.y+b.y)/2-rect.top-viewHeight/2};}
@@ -272,7 +273,7 @@ function setupPlanner(catalog, byId, statText, esc) {
   el('plan-reset').onclick=()=>{remember();allocated=new Set([origin]);save();update();};
   el('plan-undo').onclick=()=>{if(history.length){load(history.pop());save();update();}};
   function buildHash(){return 'planner?'+new URLSearchParams({v:'1',class:origin,nodes:[...allocated].filter(x=>x!==origin).sort().join(',')});}
-  el('plan-share').onclick=async()=>{const url=new URL(location.href);url.hash=buildHash();try{await navigator.clipboard.writeText(url.href);el('plan-import-message').textContent='Build link copied.';}catch{if(location.hash!==url.hash){pendingShareHash=url.hash.slice(1);location.hash=url.hash;}el('plan-import-message').textContent='Your build is in the address bar. Copy the URL to keep it.';}};
+  el('plan-share').onclick=async()=>{const url=new URL(location.href);url.searchParams.set('lang',window.NNBI18n.locale);url.hash=buildHash();try{await navigator.clipboard.writeText(url.href);el('plan-import-message').textContent=t('Build link copied.');}catch{if(location.hash!==url.hash){pendingShareHash=url.hash.slice(1);location.hash=url.hash;}el('plan-import-message').textContent=t('Your build is in the address bar. Copy the URL to keep it.');}};
   window.addEventListener('resize',resize,{signal:events.signal});
   window.addEventListener('blur',deactivate,{signal:events.signal});
   window.addEventListener('focus',()=>{if(!el('planner').hidden&&!el('detail').open)activate();},{signal:events.signal});
@@ -281,7 +282,7 @@ function setupPlanner(catalog, byId, statText, esc) {
   restore();
   return {open(hash){
     if(!activate())return;
-    if(hash===pendingShareHash){pendingShareHash='';el('plan-import-message').textContent='Your build is in the address bar. Copy the URL to keep it.';return;}
+    if(hash===pendingShareHash){pendingShareHash='';el('plan-import-message').textContent=t('Your build is in the address bar. Copy the URL to keep it.');return;}
     opening=true;const params=new URLSearchParams(hash.split('?')[1]||''),classes=['warrior_center','mage_center','rogue_center','cleric_center'];
     const ids=params.has('nodes')?(params.get('nodes')?params.get('nodes').split(','):[]):null;
     let error='';
@@ -290,13 +291,13 @@ function setupPlanner(catalog, byId, statText, esc) {
     else if(params.has('class')&&!classes.includes(params.get('class')))error='This build link has an unknown class origin.';
     else if(ids&&ids.length>nodes.length)error='This build link contains too many talents.';
     else if([...params.keys()].some(key=>params.getAll(key).length>1))error='This build link contains duplicate fields.';
-    if(error){el('plan-import-message').textContent=error+' Your saved plan was kept.';el('plan-class').value=origin;selected=map.has(selected)?selected:origin;resize();focus(selected);opening=false;update();return;}
-    el('plan-import-message').textContent='';
+    if(error){el('plan-import-message').textContent=t(error)+t(' Your saved plan was kept.');el('plan-class').value=origin;selected=map.has(selected)?selected:origin;resize();focus(selected);opening=false;update();return;}
+    el('plan-import-message').textContent=t('');
     if(ids||(params.has('class')&&params.get('class')!==origin))history=[];
     if(params.has('class'))origin=params.get('class');
     else if(params.has('node')&&!activeNodeAllocated(params.get('node'))){const target=map.get(params.get('node')),inferred=classes.includes(target?.id)?target.id:target?.data.entry_origin;if(classes.includes(inferred)&&inferred!==origin){origin=inferred;history=[];}}
     el('plan-class').value=origin;
-    if(ids){load(ids);save();const dropped=[...new Set(ids)].filter(id=>!allocated.has(id));if(dropped.length)el('plan-import-message').textContent=`Ignored ${dropped.length} unknown or disconnected talent${dropped.length===1?'':'s'}. Only connected choices were imported.`;}else restore();
+    if(ids){load(ids);save();const dropped=[...new Set(ids)].filter(id=>!allocated.has(id));if(dropped.length)el('plan-import-message').textContent=t('Ignored {count} unknown or disconnected talents. Only connected choices were imported.',{count:displayNumber(dropped.length)});}else restore();
     resize();selected=map.has(params.get('node'))?params.get('node'):viewWidth<600?[...allocated].filter(id=>id!==origin).at(-1)||origin:origin;popupOpen=params.has('node');options();fit();if(viewWidth<600||params.has('node')||allocated.size===1)focus(selected);opening=false;update();
   },activate,deactivate,dispose,chained,reachable,toggle,choose,buildHash,ready:loadImages,nodeGeometry:id=>map.has(id)?{center:xy(map.get(id)),radius:radius(id),hitRadius:hitRadius(id)}:null,projectNode:id=>map.has(id)?xy(map.get(id)):null,getState:()=>({origin,selected,allocated:[...allocated],spent:spent(),view:{zoom,pan:{...pan},width:viewWidth,height:viewHeight,dpr,bakeScale:2},artworkReady:!!artwork?.naturalWidth,artworkResolution:artwork?.naturalWidth||0})};
   function activeNodeAllocated(id){return allocated.has(id);}

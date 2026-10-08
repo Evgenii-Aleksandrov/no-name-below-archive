@@ -1,12 +1,19 @@
 @font-face{font-family:Cinzel;src:url('engine/idle-game-engine/assets/fonts/cinzel.ttf') format('truetype');font-display:swap}
 @font-face{font-family:ArchiveProse;src:url('engine/idle-game-engine/assets/fonts/cormorant-garamond/CormorantGaramond[wght].ttf') format('truetype');font-display:swap}
 :root{--bg:#0a100e;--panel:#141c17;--surface:#1c241b;--line:#c5aa6938;--gold:#d2b576;--muted:#a6ae9e;--text:#ece7d5;--soft:#c5cbb9;--heading:Cinzel,Georgia,serif;--body:ArchiveProse,Georgia,serif}
+body[data-locale="ru"]{--heading:Cinzel,"Times New Roman",serif;--body:ArchiveProse,"Times New Roman",serif}
+body[data-locale="zh-CN"]{--heading:"Songti SC","STSong","Noto Serif CJK SC","SimSun",serif;--body:"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif}
+body[data-locale="zh-CN"] .eyebrow,body[data-locale="zh-CN"] .brand small{letter-spacing:1px}
+body[data-locale="zh-CN"] button,body[data-locale="zh-CN"] input,body[data-locale="zh-CN"] select{font-family:var(--body)}
+.language-picker{flex:none;min-width:0}.language-picker select{width:115px;padding:10px 8px;font-family:system-ui,sans-serif}
+.locale-notice{margin:0;padding:10px 24px;color:var(--soft);border-bottom:1px solid var(--line);font:14px/1.5 system-ui,sans-serif}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth;scroll-padding-top:90px}
 body{margin:0;color:var(--text);background:radial-gradient(ellipse at 15% 0,#32453336,transparent 60%),var(--bg);font:18px/1.5 var(--body)}
 ::selection{background:#d2b57644;color:#fff8df}
 a{color:inherit;text-decoration:none}
 button,input,select{font:14px Georgia,serif;color:var(--text);background:#101812;border:1px solid #56634b;border-radius:2px;min-height:44px;padding:10px 14px}
+.masthead button,.masthead input,.masthead select{height:44px;line-height:20px}
 button,a,select{touch-action:manipulation}
 button{cursor:pointer}
 button:hover,select:hover{border-color:var(--gold);background:#243021}
@@ -54,7 +61,7 @@ img{max-width:100%}
 .collection-rail{position:sticky;top:25px;border-right:1px solid var(--line);padding-right:20px}
 .rail-title{font:20px var(--heading);margin:0 0 22px;color:#ede5cf}
 #categories{display:flex;flex-direction:column;gap:2px}
-#categories a{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:42px;padding:9px 10px;color:#c0c9b5;font:13px var(--body);font-weight:600;position:relative;border-left:2px solid transparent}
+#categories a{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:42px;padding:9px 10px;color:#c0c9b5;font-family:var(--body);font-size:13px;line-height:normal;font-weight:600;position:relative;border-left:2px solid transparent}
 #categories a:hover{background:#b8b8850b;color:#f1e3c3}
 #categories a.active{color:#f0d79d;background:linear-gradient(90deg,#c1a46b1c,transparent);border-left-color:var(--gold)}
 #categories a small{font:10px Georgia;color:#9aa58d}
@@ -273,6 +280,7 @@ body:has(#showcase:not([hidden])) .library-footer{display:none}
 #error{position:fixed;z-index:20;bottom:20px;left:50%;transform:translateX(-50%);max-width:calc(100% - 30px);padding:14px 24px;border:1px solid #c9a072;background:#261d14;color:#ffe4c0;font:18px var(--body);box-shadow:0 10px 50px #0008}
 @media(min-width:1600px){.cards{grid-template-columns:repeat(4,minmax(0,1fr))}.category-classes,.category-dungeons,.category-skills,.category-talents,.category-orbs{grid-template-columns:repeat(2,minmax(0,1fr))}.text-records{display:block}}
 @media(max-width:1200px){.masthead{gap:16px;padding:0 24px}.brand{font-size:14px}.masthead nav a{font-size:11px;padding:15px 9px}.global-search{width:180px}.category-subclasses{grid-template-columns:repeat(3,minmax(0,1fr))}.category-enemies{grid-template-columns:repeat(2,minmax(0,1fr))}.workspace{padding:28px 26px 60px;grid-template-columns:175px minmax(0,1fr);gap:24px}.detail-layout{grid-template-columns:250px minmax(0,1fr);gap:24px}}
+@media(max-width:1150px){.masthead{flex-wrap:wrap;height:auto;min-height:110px;padding:14px 24px;gap:10px}.brand{margin-right:auto}.nav-toggle{display:flex;align-items:center;gap:12px;font-size:12px}.masthead nav{display:none;order:4;width:100%;padding:8px 0;grid-template-columns:repeat(3,minmax(0,1fr));margin:0}.masthead nav.is-open{display:grid}.masthead nav a{padding:12px;text-align:center;border:1px solid var(--line)}.masthead nav a:after{display:none}.language-picker{order:3}.masthead .global-search{order:3;flex:1;min-width:160px;width:auto}.home-menu .intro{min-height:calc(100svh - 110px)}}
 @media(max-width:950px){.masthead{flex-wrap:wrap;height:auto;min-height:110px;padding:14px 24px;gap:10px}.brand{margin-right:auto}.nav-toggle{display:flex;align-items:center;gap:12px;font-size:12px}.masthead nav{display:none;order:4;width:100%;padding:8px 0;grid-template-columns:repeat(3,minmax(0,1fr));margin:0}.masthead nav.is-open{display:grid}.masthead nav a{padding:12px;text-align:center;border:1px solid var(--line)}.masthead nav a:after{display:none}.global-search{order:3;width:100%}.workspace{display:block}.collection-rail{display:none}.mobile-collection{display:flex;align-items:center;gap:15px;font:13px var(--heading);margin:0 0 18px}.mobile-collection select{flex:1;min-width:0}.intro-copy{padding:45px 0 45px 28px}.intro h1{font-size:43px}.intro .lede{font-size:23px}.intro{min-height:430px}.hero-art{min-height:430px}.category-subclasses{grid-template-columns:repeat(4,minmax(0,1fr))}.detail-layout{grid-template-columns:220px minmax(0,1fr);gap:24px}.reference-list{grid-template-columns:1fr}.gallery-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:650px){
  html{scroll-padding-top:10px}
@@ -343,6 +351,7 @@ body:has(#showcase:not([hidden])) .library-footer{display:none}
 /* The entrance is a menu; the Armory is the single tier collection. */
 .at-home .library-footer{display:none}
 .home-menu .intro{min-height:calc(100svh - 78px);grid-template-columns:minmax(0,1fr) minmax(0,1.08fr);border-bottom:0}
+@media(min-width:951px) and (max-width:1150px){.home-menu .intro{min-height:calc(100svh - 110px)}}
 .home-menu .intro-copy{padding:40px clamp(24px,4vw,64px)}
 .home-menu h1{font-size:clamp(40px,4vw,60px);line-height:1.1;max-width:660px}
 .home-menu .hero-art{min-height:100%;align-self:stretch}
