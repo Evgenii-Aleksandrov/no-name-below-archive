@@ -381,7 +381,7 @@ body:has(#showcase:not([hidden])) .library-footer{display:none}
 .text-reference .link-metrics{display:flex;flex-wrap:wrap;gap:6px 14px}
 .text-reference .link-metrics span{white-space:normal}
 .combat-sprite{position:relative;overflow:hidden;aspect-ratio:1;flex:none}
-.combat-sprite .sprite-strip{position:absolute;left:0;top:0;width:var(--sheet-width);height:var(--sheet-height);max-width:none;max-height:none;object-fit:fill;animation:creature-idle 1.2s steps(var(--idle-frames),end) infinite;animation-play-state:paused}
+.combat-sprite .sprite-strip{position:absolute;left:0;top:0;width:var(--sheet-width);height:var(--sheet-height);max-width:none;max-height:none;object-fit:fill;animation:creature-idle var(--idle-duration,1.2s) steps(var(--idle-frames),end) infinite;animation-play-state:paused}
 .combat-sprite.is-live .sprite-strip{animation-play-state:running}
 @keyframes creature-idle{to{transform:translate3d(var(--idle-shift),0,0)}}
 .enemy-stage{position:relative;height:330px;overflow:hidden;background:#101a15 center 45%/cover;border:1px solid var(--line);margin-bottom:16px}
