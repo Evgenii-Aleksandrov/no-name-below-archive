@@ -55,7 +55,7 @@
       "y": 405.6,
       "r": 7.7,
       "kind": "minor",
-      "name": "Iron Grip",
+      "name": "Suppressed Anger",
       "cluster": null
     },
     "hw_outer_north_6": {
@@ -79,7 +79,7 @@
       "y": 342.7,
       "r": 7.7,
       "kind": "minor",
-      "name": "Guardian",
+      "name": "Sense of Duty",
       "cluster": null
     },
     "hw_outer_north_12": {
@@ -119,7 +119,7 @@
       "y": 1621.9,
       "r": 7.7,
       "kind": "minor",
-      "name": "Agility",
+      "name": "Trust in Oneself",
       "cluster": null
     },
     "hw_outer_south_6": {
@@ -287,7 +287,7 @@
       "y": 1317.9,
       "r": 7.7,
       "kind": "minor",
-      "name": "Agility",
+      "name": "Trust in Oneself",
       "cluster": null
     },
     "hw_inner_south_3": {
@@ -295,7 +295,7 @@
       "y": 1335.3,
       "r": 7.7,
       "kind": "minor",
-      "name": "Precision",
+      "name": "Unwavering Attention",
       "cluster": null
     },
     "hw_inner_south_7": {
@@ -527,7 +527,7 @@
       "y": 674.4,
       "r": 7.7,
       "kind": "minor",
-      "name": "Sacrifice",
+      "name": "Unquiet Ambition",
       "cluster": null
     },
     "hw_cleric_inward_2": {
@@ -551,7 +551,7 @@
       "y": 945.2,
       "r": 7.7,
       "kind": "minor",
-      "name": "Robust",
+      "name": "Self-Reliance",
       "cluster": null
     },
     "hw_rogue_inward_0": {
@@ -583,7 +583,7 @@
       "y": 1083,
       "r": 7.7,
       "kind": "minor",
-      "name": "Robust",
+      "name": "Self-Reliance",
       "cluster": null
     },
     "hw_mage_inward_1": {
@@ -631,7 +631,7 @@
       "y": 462.4,
       "r": 7.7,
       "kind": "minor",
-      "name": "Faith and Steel",
+      "name": "Private Conviction",
       "cluster": null
     },
     "hw_cardinal_south_0": {
@@ -671,7 +671,7 @@
       "y": 1013.8,
       "r": 7.7,
       "kind": "minor",
-      "name": "Iron Grip",
+      "name": "Suppressed Anger",
       "cluster": null
     },
     "hw_cardinal_west_1": {
@@ -711,7 +711,7 @@
       "y": 1013.8,
       "r": 7.7,
       "kind": "minor",
-      "name": "Conduit",
+      "name": "Inner Tension",
       "cluster": null
     },
     "hw_cardinal_east_3": {
@@ -767,7 +767,7 @@
       "y": 585,
       "r": 7.7,
       "kind": "minor",
-      "name": "Relentless",
+      "name": "Urge to Continue",
       "cluster": 92
     },
     "hw_mid_nw_w_1": {
@@ -783,7 +783,7 @@
       "y": 883.5,
       "r": 7.7,
       "kind": "minor",
-      "name": "Relentless",
+      "name": "Urge to Continue",
       "cluster": 96
     },
     "hw_mid_nw_w_3": {
@@ -895,7 +895,7 @@
       "y": 1653.9,
       "r": 7.7,
       "kind": "minor",
-      "name": "Agility",
+      "name": "Trust in Oneself",
       "cluster": null
     },
     "hw_mid_sw_w_1": {
@@ -1023,7 +1023,7 @@
       "y": 781.8,
       "r": 7.7,
       "kind": "minor",
-      "name": "Relentless",
+      "name": "Urge to Continue",
       "cluster": 69
     },
     "cl_warcry_notable": {
@@ -1047,7 +1047,7 @@
       "y": 928.1,
       "r": 7.7,
       "kind": "minor",
-      "name": "Tenacity",
+      "name": "Quiet Persistence",
       "cluster": 66
     },
     "cl_warcry_r2": {
@@ -1079,7 +1079,7 @@
       "y": 1188.9,
       "r": 7.7,
       "kind": "minor",
-      "name": "Agility",
+      "name": "Trust in Oneself",
       "cluster": 73
     },
     "cl_precision_crit_r1": {
@@ -1127,7 +1127,7 @@
       "y": 1211,
       "r": 7.7,
       "kind": "minor",
-      "name": "Agility",
+      "name": "Trust in Oneself",
       "cluster": 61
     },
     "cl_blade_master_r1": {
@@ -1175,7 +1175,7 @@
       "y": 1232.9,
       "r": 7.7,
       "kind": "minor",
-      "name": "Overcharge",
+      "name": "Fear Held in Check",
       "cluster": 57
     },
     "cl_fire_mastery_r2": {
@@ -1223,7 +1223,7 @@
       "y": 1053.2,
       "r": 7.7,
       "kind": "minor",
-      "name": "Robust",
+      "name": "Self-Reliance",
       "cluster": 33
     },
     "cl_arcane_power_r2": {
@@ -1303,7 +1303,7 @@
       "y": 917.8,
       "r": 7.7,
       "kind": "minor",
-      "name": "Devotion",
+      "name": "Need for Shelter",
       "cluster": 30
     },
     "cl_spell_speed_r1": {
@@ -1335,7 +1335,7 @@
       "y": 887.5,
       "r": 11.5,
       "kind": "notable",
-      "name": "Retribution",
+      "name": "Wish to Retaliate",
       "cluster": 65
     },
     "cl_resilience_r0": {
@@ -1351,7 +1351,7 @@
       "y": 874.6,
       "r": 7.7,
       "kind": "minor",
-      "name": "Endurance",
+      "name": "Willingness to Endure",
       "cluster": 65
     },
     "cl_resilience_r2": {
@@ -1375,7 +1375,7 @@
       "y": 884.6,
       "r": 11.5,
       "kind": "notable",
-      "name": "Fortitude",
+      "name": "Refusal to Fall",
       "cluster": 64
     },
     "cl_hp_pool_r0": {
@@ -1383,7 +1383,7 @@
       "y": 833.5,
       "r": 7.7,
       "kind": "minor",
-      "name": "Tenacity",
+      "name": "Quiet Persistence",
       "cluster": 64
     },
     "cl_hp_pool_r1": {
@@ -1511,7 +1511,7 @@
       "y": 307.3,
       "r": 7.7,
       "kind": "minor",
-      "name": "Relentless",
+      "name": "Urge to Continue",
       "cluster": 81
     },
     "cl_auto_1_r2": {
@@ -1663,7 +1663,7 @@
       "y": 410.6,
       "r": 7.7,
       "kind": "minor",
-      "name": "Faith and Steel",
+      "name": "Private Conviction",
       "cluster": 77
     },
     "cl_auto_5_r2": {
@@ -1695,7 +1695,7 @@
       "y": 295.7,
       "r": 7.7,
       "kind": "minor",
-      "name": "Guardian",
+      "name": "Sense of Duty",
       "cluster": 3
     },
     "cl_auto_6_r1": {
@@ -1711,7 +1711,7 @@
       "y": 217.4,
       "r": 11.5,
       "kind": "notable",
-      "name": "Elemental Focus",
+      "name": "Restless Thought",
       "cluster": 3
     },
     "cl_auto_6_r3": {
@@ -1735,7 +1735,7 @@
       "y": 386.7,
       "r": 7.7,
       "kind": "minor",
-      "name": "Crusader",
+      "name": "Ardent Conviction",
       "cluster": 18
     },
     "cl_auto_7_r1": {
@@ -1743,7 +1743,7 @@
       "y": 387.1,
       "r": 7.7,
       "kind": "minor",
-      "name": "Guardian",
+      "name": "Sense of Duty",
       "cluster": 18
     },
     "cl_auto_7_r2": {
@@ -1759,7 +1759,7 @@
       "y": 417.4,
       "r": 7.7,
       "kind": "minor",
-      "name": "Faith and Steel",
+      "name": "Private Conviction",
       "cluster": 18
     },
     "cl_auto_8_notable": {
@@ -1903,7 +1903,7 @@
       "y": 1653,
       "r": 11.5,
       "kind": "notable",
-      "name": "Robust",
+      "name": "Self-Reliance",
       "cluster": 108
     },
     "cl_auto_11_r2": {
@@ -1935,7 +1935,7 @@
       "y": 1531.3,
       "r": 7.7,
       "kind": "minor",
-      "name": "Precision",
+      "name": "Unwavering Attention",
       "cluster": 109
     },
     "cl_auto_12_r2": {
@@ -2231,7 +2231,7 @@
       "y": 1512.5,
       "r": 11.5,
       "kind": "notable",
-      "name": "Elemental Mastery",
+      "name": "Self-Command",
       "cluster": 47
     },
     "cl_auto_20_r0": {
@@ -2311,7 +2311,7 @@
       "y": 485.5,
       "r": 11.5,
       "kind": "notable",
-      "name": "Endurance",
+      "name": "Willingness to Endure",
       "cluster": 91
     },
     "cl_auto_22_r0": {
@@ -2495,7 +2495,7 @@
       "y": 1100,
       "r": 11.5,
       "kind": "notable",
-      "name": "Executioner",
+      "name": "Intent to Hurt",
       "cluster": 98
     },
     "cl_auto_26_r3": {
@@ -2543,7 +2543,7 @@
       "y": 1144.1,
       "r": 11.5,
       "kind": "notable",
-      "name": "Agility",
+      "name": "Trust in Oneself",
       "cluster": 100
     },
     "cl_auto_28_r0": {
@@ -2583,7 +2583,7 @@
       "y": 1385.6,
       "r": 11.5,
       "kind": "notable",
-      "name": "Savagery",
+      "name": "Unrestrained Anger",
       "cluster": 103
     },
     "cl_auto_29_r0": {
@@ -2655,7 +2655,7 @@
       "y": 1497.7,
       "r": 7.7,
       "kind": "minor",
-      "name": "Precision",
+      "name": "Unwavering Attention",
       "cluster": 104
     },
     "cl_auto_31_notable": {
@@ -2799,7 +2799,7 @@
       "y": 1061.4,
       "r": 7.7,
       "kind": "minor",
-      "name": "Conduit",
+      "name": "Inner Tension",
       "cluster": 36
     },
     "cl_auto_34_r2": {
@@ -2831,7 +2831,7 @@
       "y": 1050.9,
       "r": 7.7,
       "kind": "minor",
-      "name": "Conduit",
+      "name": "Inner Tension",
       "cluster": 13
     },
     "cl_auto_35_r1": {
@@ -2951,7 +2951,7 @@
       "y": 795.8,
       "r": 7.7,
       "kind": "minor",
-      "name": "Devotion",
+      "name": "Need for Shelter",
       "cluster": 10
     },
     "cl_auto_38_r2": {
@@ -2967,7 +2967,7 @@
       "y": 794.1,
       "r": 7.7,
       "kind": "minor",
-      "name": "Sanctity",
+      "name": "Private Scruples",
       "cluster": 10
     },
     "cl_auto_39_notable": {
@@ -3103,7 +3103,7 @@
       "y": 650.1,
       "r": 7.7,
       "kind": "minor",
-      "name": "Guardian",
+      "name": "Sense of Duty",
       "cluster": 75
     },
     "cl_auto_42_r1": {
@@ -3127,7 +3127,7 @@
       "y": 611.9,
       "r": 7.7,
       "kind": "minor",
-      "name": "Faith and Steel",
+      "name": "Private Conviction",
       "cluster": 75
     },
     "cl_auto_43_notable": {
@@ -3151,7 +3151,7 @@
       "y": 749.4,
       "r": 11.5,
       "kind": "notable",
-      "name": "Iron Will",
+      "name": "Unshaken Nerve",
       "cluster": 29
     },
     "cl_auto_43_r2": {
@@ -3183,7 +3183,7 @@
       "y": 583.9,
       "r": 7.7,
       "kind": "minor",
-      "name": "Guardian",
+      "name": "Sense of Duty",
       "cluster": 21
     },
     "cl_auto_44_r2": {
@@ -3223,7 +3223,7 @@
       "y": 763.9,
       "r": 7.7,
       "kind": "minor",
-      "name": "Sacrifice",
+      "name": "Unquiet Ambition",
       "cluster": 26
     },
     "cl_auto_45_r2": {
@@ -3495,7 +3495,7 @@
       "y": 1020.6,
       "r": 11.5,
       "kind": "notable",
-      "name": "Unyielding",
+      "name": "Refusal to Retreat",
       "cluster": 71
     },
     "cl_auto_52_r3": {
@@ -3855,7 +3855,7 @@
       "y": 542.8,
       "r": 7.7,
       "kind": "minor",
-      "name": "Iron Grip",
+      "name": "Suppressed Anger",
       "cluster": 85
     },
     "cl_auto_62_notable": {
@@ -3871,7 +3871,7 @@
       "y": 595.3,
       "r": 7.7,
       "kind": "minor",
-      "name": "Relentless",
+      "name": "Urge to Continue",
       "cluster": 90
     },
     "cl_auto_62_r1": {
@@ -3959,7 +3959,7 @@
       "y": 632.8,
       "r": 7.7,
       "kind": "minor",
-      "name": "Crusader",
+      "name": "Ardent Conviction",
       "cluster": 19
     },
     "cl_auto_64_r2": {
@@ -4087,7 +4087,7 @@
       "y": 1317.9,
       "r": 7.7,
       "kind": "minor",
-      "name": "Precision",
+      "name": "Unwavering Attention",
       "cluster": 107
     },
     "cl_auto_68_notable": {
@@ -4119,7 +4119,7 @@
       "y": 1459.9,
       "r": 7.7,
       "kind": "minor",
-      "name": "Ricochet",
+      "name": "Nervous Haste",
       "cluster": 110
     },
     "cl_auto_68_r3": {
@@ -4375,7 +4375,7 @@
       "y": 1023.6,
       "r": 7.7,
       "kind": "minor",
-      "name": "Fortitude",
+      "name": "Refusal to Fall",
       "cluster": 67
     },
     "cl_auto_75_r1": {
@@ -4519,7 +4519,7 @@
       "y": 1392.1,
       "r": 11.5,
       "kind": "notable",
-      "name": "Relentless",
+      "name": "Urge to Continue",
       "cluster": 117
     },
     "cl_auto_79_r0": {
@@ -4783,7 +4783,7 @@
       "y": 495.8,
       "r": 7.7,
       "kind": "minor",
-      "name": "Crusader",
+      "name": "Ardent Conviction",
       "cluster": 20
     },
     "cl_auto_86_notable": {
@@ -4815,7 +4815,7 @@
       "y": 518.6,
       "r": 7.7,
       "kind": "minor",
-      "name": "Faith and Steel",
+      "name": "Private Conviction",
       "cluster": 76
     },
     "cl_auto_86_r3": {
@@ -5063,7 +5063,7 @@
       "y": 499.1,
       "r": 11.5,
       "kind": "notable",
-      "name": "Guardian",
+      "name": "Sense of Duty",
       "cluster": 85
     },
     "cl_auto_93_r0": {
@@ -5079,7 +5079,7 @@
       "y": 601.3,
       "r": 7.7,
       "kind": "minor",
-      "name": "Faith and Steel",
+      "name": "Private Conviction",
       "cluster": 85
     },
     "cl_auto_93_r2": {
@@ -5223,7 +5223,7 @@
       "y": 622.7,
       "r": 7.7,
       "kind": "minor",
-      "name": "Sacrifice",
+      "name": "Unquiet Ambition",
       "cluster": 14
     },
     "cl_auto_97_r1": {
@@ -5335,7 +5335,7 @@
       "y": 659.8,
       "r": 7.7,
       "kind": "minor",
-      "name": "Devotion",
+      "name": "Need for Shelter",
       "cluster": 7
     },
     "cl_auto_100_r1": {
@@ -5367,7 +5367,7 @@
       "y": 1713.9,
       "r": 11.5,
       "kind": "notable",
-      "name": "Precision",
+      "name": "Unwavering Attention",
       "cluster": 118
     },
     "cl_auto_101_r1": {
@@ -5399,7 +5399,7 @@
       "y": 1507.9,
       "r": 11.5,
       "kind": "notable",
-      "name": "Blood Siphon",
+      "name": "Need to Take",
       "cluster": 115
     },
     "cl_auto_102_r0": {
@@ -5503,7 +5503,7 @@
       "y": 1373.6,
       "r": 7.7,
       "kind": "minor",
-      "name": "Precision",
+      "name": "Unwavering Attention",
       "cluster": 106
     },
     "cl_auto_104_r3": {
@@ -5583,7 +5583,7 @@
       "y": 1407.9,
       "r": 7.7,
       "kind": "minor",
-      "name": "Overcharge",
+      "name": "Fear Held in Check",
       "cluster": 46
     },
     "cl_auto_106_r3": {
@@ -5679,7 +5679,7 @@
       "y": 193.3,
       "r": 17.9,
       "kind": "keystone",
-      "name": "Resolute Technique",
+      "name": "Certainty",
       "cluster": null
     },
     "ks_1_approach": {
@@ -5695,7 +5695,7 @@
       "y": 117.6,
       "r": 17.9,
       "kind": "keystone",
-      "name": "Unwavering Stance",
+      "name": "Stubbornness",
       "cluster": null
     },
     "ks_2_approach": {
@@ -5711,7 +5711,7 @@
       "y": 676.8,
       "r": 17.9,
       "kind": "keystone",
-      "name": "Endless Hunger",
+      "name": "Dependence",
       "cluster": null
     },
     "ks_3_approach": {
@@ -5727,7 +5727,7 @@
       "y": 1772.4,
       "r": 17.9,
       "kind": "keystone",
-      "name": "Chaos Inoculation",
+      "name": "Fear of Pain",
       "cluster": null
     },
     "ks_4_approach": {
@@ -5743,7 +5743,7 @@
       "y": 1272.5,
       "r": 17.9,
       "kind": "keystone",
-      "name": "Ghost Reaver",
+      "name": "Detachment",
       "cluster": null
     },
     "ks_5_approach": {
@@ -5759,7 +5759,7 @@
       "y": 1916.1,
       "r": 17.9,
       "kind": "keystone",
-      "name": "Iron Grip",
+      "name": "Suppressed Anger",
       "cluster": null
     },
     "ks_6_approach": {
@@ -5775,7 +5775,7 @@
       "y": 1753.2,
       "r": 17.9,
       "kind": "keystone",
-      "name": "Perfect Agony",
+      "name": "Resentment",
       "cluster": null
     },
     "ks_7_approach": {
@@ -5791,7 +5791,7 @@
       "y": 1933.6,
       "r": 17.9,
       "kind": "keystone",
-      "name": "Acrobatics",
+      "name": "Alarm",
       "cluster": null
     },
     "ks_8_approach": {
@@ -5807,7 +5807,7 @@
       "y": 1249.4,
       "r": 17.9,
       "kind": "keystone",
-      "name": "Master Toxicologist",
+      "name": "Bitterness",
       "cluster": null
     },
     "ks_9_approach": {
@@ -5823,7 +5823,7 @@
       "y": 258.7,
       "r": 17.9,
       "kind": "keystone",
-      "name": "Glancing Blows",
+      "name": "Compromise",
       "cluster": null
     },
     "ks_10_approach": {
@@ -5839,7 +5839,7 @@
       "y": 117.6,
       "r": 17.9,
       "kind": "keystone",
-      "name": "Zealot's Oath",
+      "name": "Vigilance",
       "cluster": null
     },
     "ks_11_approach": {
@@ -5855,7 +5855,7 @@
       "y": 665.4,
       "r": 17.9,
       "kind": "keystone",
-      "name": "Iron Reflexes",
+      "name": "Resignation",
       "cluster": null
     },
     "ks_12_approach": {
@@ -5871,7 +5871,7 @@
       "y": 1025.7,
       "r": 17.9,
       "kind": "keystone",
-      "name": "Vaal Pact",
+      "name": "Impatience",
       "cluster": null
     },
     "ks_13_approach": {
@@ -5887,7 +5887,7 @@
       "y": 1878,
       "r": 17.9,
       "kind": "keystone",
-      "name": "Blood Magic",
+      "name": "Self-Neglect",
       "cluster": null
     },
     "ks_14_approach": {
@@ -5903,7 +5903,7 @@
       "y": 130.6,
       "r": 17.9,
       "kind": "keystone",
-      "name": "Crimson Dance",
+      "name": "Small Cruelties",
       "cluster": null
     },
     "ks_15_approach": {
@@ -5919,7 +5919,7 @@
       "y": 1019.1,
       "r": 17.9,
       "kind": "keystone",
-      "name": "Pain Attunement",
+      "name": "Desperation",
       "cluster": null
     },
     "ks_16": {
@@ -5943,7 +5943,7 @@
       "y": 1901.5,
       "r": 17.9,
       "kind": "keystone",
-      "name": "Hollow Palm",
+      "name": "Defiance",
       "cluster": null
     },
     "manual_1780861634643": {

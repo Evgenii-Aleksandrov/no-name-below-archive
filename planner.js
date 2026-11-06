@@ -9,7 +9,7 @@ function setupPlanner(catalog, byId, statText, esc) {
   let pendingShareHash='',opening=false,imageFrame=0,viewWidth=0,viewHeight=0,dpr=1,atlas=null,atlasPromise=null,artwork=null,detailPromise=null,pendingView=null;
   const ART='engine/idle-game-engine/assets/talent_tree/', WEB_ART='assets/';
   const pointers=new Map();let pinch=null,popupOpen=false,pressed=null;
-  const COORDINATE_SHA='1ff03d69817c37e2a04868842733ad28ba3731a9e3d191c51716e1990aba3b4a';
+  const COORDINATE_SHA='471beb22fc1969be8c4ff1a0688bcc60d3952585974ff093e9623af54bfb2de3';
   const ownedFetches=new Set(),events=new AbortController(),ignoredPointers=new Set();
   let active=false,disposed=false,activation=0,coordinatesPromise=null,previewPromise=null,viewIntent={kind:'fit',pending:true};
   function current(ticket){return !disposed&&active&&ticket===activation&&!el('planner').hidden&&!el('detail').open;}
@@ -221,12 +221,14 @@ function setupPlanner(catalog, byId, statText, esc) {
   }
   function update(){
     const r=map.get(selected)||map.get(origin),d=r.data,reason=selectionReason(r.id);
+    const scalarStats=Object.entries(d.passive_effects||{}).map(([k,v])=>html`<p>${esc(statText(k,v).join(': '))}</p>`).join('');
     el('plan-count').textContent=t('{count} talents / {points} points',{count:displayNumber(allocated.size-1),points:displayNumber(spent())});
-    el('plan-selection').innerHTML=html`<button id="plan-popup-close" aria-label="Close talent popup">&times;</button><div class="node-popup-heading">${r.image?html`<img src="${rawEsc(r.image)}" alt="" width="40" height="40">`:''}<div><p class="node-popup-meta">${esc(title(d.kind))} / ${esc(t('{count} points',{count:displayNumber(d.cost??1)}))}</p><h2 id="plan-node-title"><a class="node-popup-details" href="#entry/${r.id}" aria-label="${esc(t('{name}: full details',{name:r.name}))}">${esc(r.name)}</a></h2></div></div><div class="plan-stats">${Object.entries(d.passive_effects||{}).map(([k,v])=>html`<p>${esc(statText(k,v).join(': '))}</p>`).join('')||html`<p>${esc(r.description)}</p>`}</div>${d.grants_skill_id?html`<p>Grants <a href="#entry/${d.grants_skill_id}">${esc(byId.get(d.grants_skill_id)?.name||d.grants_skill_id)}</a></p>`:''}<p class="node-popup-reason">${esc(reason)}</p>`;
+    el('plan-selection').innerHTML=html`<button id="plan-popup-close" aria-label="Close talent popup">&times;</button><div class="node-popup-heading">${r.image?html`<img src="${rawEsc(r.image)}" alt="" width="40" height="40">`:''}<div><p class="node-popup-meta">${esc(title(d.kind))} / ${esc(t('{count} points',{count:displayNumber(d.cost??1)}))}</p><h2 id="plan-node-title"><a class="node-popup-details" href="#entry/${r.id}" aria-label="${esc(t('{name}: full details',{name:r.name}))}">${esc(r.name)}</a></h2></div></div><div class="plan-stats">${scalarStats}${d.talent_effects?.length||!scalarStats?html`<p>${esc(r.description)}</p>`:''}</div>${d.grants_skill_id?html`<p>Grants <a href="#entry/${d.grants_skill_id}">${esc(byId.get(d.grants_skill_id)?.name||d.grants_skill_id)}</a></p>`:''}<p class="node-popup-reason">${esc(reason)}</p>`;
     el('plan-popup-close').onclick=closePopup;
     el('plan-message').textContent=reason;
     const totals={};for(const id of allocated)for(const [k,v] of Object.entries(map.get(id).data.passive_effects||{}))if(typeof v==='number')totals[k]=(totals[k]||0)+v;
-    el('plan-summary').innerHTML=html`${Object.entries(totals).map(([k,v])=>{const [label,value]=statText(k,v);return html`<div class="summary-row"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`;}).join('')||'<p class="summary-empty">Choose a talent to begin.</p>'}<p class="summary-note">Unlimited planning. Spent costs, not earned points. Additive inputs; equipment and resonance excluded.</p>`;
+    const behaviors=[...allocated].map(id=>map.get(id)).filter(r=>r.data.talent_effects?.length);
+    el('plan-summary').innerHTML=html`${Object.entries(totals).map(([k,v])=>{const [label,value]=statText(k,v);return html`<div class="summary-row"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`;}).join('')||'<p class="summary-empty">Choose a talent to begin.</p>'}${behaviors.map(r=>html`<div class="summary-behavior"><p><strong>${esc(r.name)}</strong></p><p>${esc(r.description)}</p></div>`).join('')}<p class="summary-note">Unlimited planning. Spent costs, not earned points. Additive inputs; equipment and resonance excluded.</p>`;
     el('plan-undo').disabled=!history.length;options();placePopup();draw();
   }
   function effectMatches(){const q=el('plan-search').value.trim().toLowerCase();return q?nodes.filter(r=>effects.get(r.id).toLowerCase().includes(q)).sort((a,b)=>Number(!chained(a.id,allocated))-Number(!chained(b.id,allocated))):[];}
