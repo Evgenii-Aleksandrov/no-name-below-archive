@@ -10,7 +10,7 @@ const roman=['','I','II','III','IV','V','VI','VII','VIII'];
 const categories={items:['Equipment & items','THE ARMORY'],orbs:['Currency & orbs','THE CRAFT'],affixes:['Affixes','PREFIXES & SUFFIXES'],skills:['Skills','THE ARTS OF COMBAT'],subclasses:['Subclasses','CHOOSE YOUR PATH'],classes:['Classes','FOUR BEGINNINGS'],talents:['Talents','THE TALENT TREE'],enemies:['Enemies','THE BESTIARY'],dungeons:['Dungeons','THE DESCENT'],enemy_skills:['Enemy abilities','KNOW YOUR ENEMY'],pools:['Affix pools','ITEM CONNECTIONS']};
 const chapters={crafting:['Crafting','THE WORK OF CURRENCY'],mechanics:['Mechanics','UNDERSTAND THE DESCENT'],search:['Search the archive','EVERY COLLECTION']};
 const mechanicsBuilds = {version: '1.0.0', android: '14', ios: '20'};
-const combatRules = [
+const mechanicsRules = [
   {
     id: 'critical',
     title: 'Critical hits',
@@ -41,6 +41,16 @@ const combatRules = [
     keywords: 'accuracy hit chance evade evasion dodge cap'
   },
   {
+    id: 'block',
+    title: 'Block',
+    formulas: [
+      ['Block chance before bonuses', 'Block rating ÷ (Block rating + 100)'],
+      ['Damage absorbed by a normal block', '100% of damage from the hit']
+    ],
+    note: 'Add bonuses to the base chance, with a 75% cap. Compromise doubles the chance after bonuses, raises the cap to 90% and makes blocks absorb 35% of damage from the hit.',
+    keywords: 'block blocking chance cap absorption shield compromise'
+  },
+  {
     id: 'resistance',
     title: 'Resistances',
     formulas: [
@@ -59,6 +69,31 @@ const combatRules = [
     ],
     note: 'Shield absorbs damage before Health. Ordinary recharge stops at your entry charge, within your current maximum. Fountain recovery can raise that limit.',
     keywords: 'energy shield es recharge recovery maximum victory cap'
+  },
+  {
+    id: 'attributes',
+    title: 'Core attributes',
+    formulas: [
+      ['Strength', '+0.5 maximum Health. +0.15 base physical damage for Warrior, Mage and Cleric. +0.3 block rating with a shield.'],
+      ['Dexterity', '+2 Accuracy, +0.5 Evasion and +0.04 percentage points to base critical chance. Rogue gains +0.1 base physical damage.'],
+      ['Intelligence', '+0.15 base magic damage and +0.3 maximum Energy Shield.']
+    ],
+    note: 'Base combat gains per point, before percentage bonuses.',
+    keywords: 'attributes strength dexterity intelligence str dex int base stats'
+  },
+  {
+    id: 'salvage-contracts',
+    title: 'Salvage contracts',
+    formulas: [
+      ['Rare items for 6 different slots', '1 × Orb of Anxiety'],
+      ['3 rare weapons', '1 × Tempering Stone'],
+      ['3 rare armor pieces (including shields and belts)', '1 × Binding Tablet'],
+      ['4 remaining rare items', '1 × Orb of Ambition'],
+      ['6 uncommon items', '1 × Orb of Doubt'],
+      ['10 common items', '1 × Orb of Longing']
+    ],
+    note: 'Contracts are checked from top to bottom. Each item counts toward at most one contract. The slot set pays once per batch. The others pay per complete group. The confirmation shows the dust and rewards.',
+    keywords: 'salvage dismantle contracts recipes dust'
   }
 ];
 const descriptions={items:'Eight tiers of equipment. Find your base, then explore its compatible modifiers.',enemies:'Know their strengths, exploit their weaknesses, and find them in the depths.',dungeons:'Follow the descent. Explore each place, its creatures, and its bosses.',classes:'Four beginnings. Compare their starting attributes, signature passives, and specializations.',subclasses:'Choose a specialization. Explore its bonuses, abilities, and Ultimate.',skills:'Compare costs, targeting, and effects. Find the skills that fit your path.',talents:'Explore connected choices in the Talent Atlas, then take them into your build.',orbs:'From the first modifier to the final refinement. Discover what each currency can change.',affixes:'Compare prefixes and suffixes, their ranges, and compatible equipment.',pools:'Find the modifiers available to each equipment type.',enemy_skills:'Study each creature’s attacks, effects, and timing.'};
@@ -275,11 +310,11 @@ function showCrafting(){
 const mechanicsLink=id=>'#mechanics?topic='+encodeURIComponent(id);
 
 function showMechanics(){
-  chapterShell('mechanics','Combat formulas and stat limits.');
+  chapterShell('mechanics','Combat formulas, core attributes and salvage contracts.');
   $('chapter').innerHTML=html`
     <p class="mechanics-build">${rawEsc(t('Rules for {version} · Android {android} · iOS {ios}',mechanicsBuilds))}</p>
     <div class="guide-grid">
-      ${combatRules.map(({id,title,formulas,note})=>html`
+      ${mechanicsRules.map(({id,title,formulas,note})=>html`
         <article class="guide-block combat-rule" id="mechanic-${id}" tabindex="-1" aria-labelledby="combat-rule-${id}">
           <h3 id="combat-rule-${id}"><a href="${mechanicsLink(id)}">${esc(title)}</a></h3>
           <dl class="combat-formulas">${formulas.map(([label,value])=>html`
@@ -303,7 +338,7 @@ function showSearch(hash){
   $('global-query').value=query;
   chapterShell('search',query?t('Results for “{query}” across all game entities.',{query}):'Search a name, property or effect across the archive.');
   const q=query.trim().toLowerCase();
-  const guides=q?combatRules.filter(({title,keywords})=>
+  const guides=q?mechanicsRules.filter(({title,keywords})=>
     [title,t(title),keywords,t(keywords)].join(' ').toLowerCase().includes(q)):[];
   const rows=q?catalog.records.filter(r=>r.search.includes(q)).sort((a,b)=>(b.name.toLowerCase()===q)-(a.name.toLowerCase()===q)||a.name.localeCompare(b.name)):[];
   const total=guides.length+rows.length;
