@@ -9,6 +9,58 @@ const html=(markup,...values)=>String(Array.isArray(markup)?markup.reduce((out,p
 const roman=['','I','II','III','IV','V','VI','VII','VIII'];
 const categories={items:['Equipment & items','THE ARMORY'],orbs:['Currency & orbs','THE CRAFT'],affixes:['Affixes','PREFIXES & SUFFIXES'],skills:['Skills','THE ARTS OF COMBAT'],subclasses:['Subclasses','CHOOSE YOUR PATH'],classes:['Classes','FOUR BEGINNINGS'],talents:['Talents','THE TALENT TREE'],enemies:['Enemies','THE BESTIARY'],dungeons:['Dungeons','THE DESCENT'],enemy_skills:['Enemy abilities','KNOW YOUR ENEMY'],pools:['Affix pools','ITEM CONNECTIONS']};
 const chapters={crafting:['Crafting','THE WORK OF CURRENCY'],mechanics:['Mechanics','UNDERSTAND THE DESCENT'],search:['Search the archive','EVERY COLLECTION']};
+const mechanicsBuilds = {version: '1.0.0', android: '14', ios: '20'};
+const combatRules = [
+  {
+    id: 'critical',
+    title: 'Critical hits',
+    formulas: [
+      ['Base critical chance', '5% + 0.04 percentage points × Dexterity'],
+      ['Critical hit damage', 'Damage before crit × critical multiplier']
+    ],
+    note: 'Flat talent bonuses join the base before talent multipliers. Direct gear and subclass bonuses add afterward. Regular chance caps at 75%, and special effects can reach 100%. The multiplier starts at ×1.5 with no general cap.',
+    keywords: 'crit chance cap critical damage crit multiplier'
+  },
+  {
+    id: 'armor',
+    title: 'Armor',
+    formulas: [
+      ['Physical damage reduction', 'Armor ÷ (Armor + 5 × D)']
+    ],
+    note: 'D is the base physical damage of the hit, before a critical strike. Armor reduces up to 90%. The same armor stops a smaller share of a heavier hit.',
+    keywords: 'armour physical hit mitigation defense armor cap'
+  },
+  {
+    id: 'evasion',
+    title: 'Accuracy and evasion',
+    formulas: [
+      ['Attack hit chance before limits', '1.25 × A ÷ [A + (E ÷ 5)^0.9]'],
+      ['Chance to evade', '100% − final hit chance']
+    ],
+    note: 'A is accuracy, E is evasion (minimum 1 in the formula). Hit chance is usually limited to 5–100%, giving up to 95% evasion, or 98% with Alarm. Zero evasion and spell-only hits skip the check.',
+    keywords: 'accuracy hit chance evade evasion dodge cap'
+  },
+  {
+    id: 'resistance',
+    title: 'Resistances',
+    formulas: [
+      ['Resistance before limits', 'Resistance of that type − penetration'],
+      ['Damage after resistance', 'Damage of that type × (1 − effective resistance)']
+    ],
+    note: 'The lower limit is −75%. The upper limit starts at 75%. Effects on maximum resistance move the upper limit.',
+    keywords: 'resist resistance cap overcap penetration elemental magic fire max resistance'
+  },
+  {
+    id: 'energy-shield',
+    title: 'Energy Shield',
+    formulas: [
+      ['Base recharge in combat', '2.5% of maximum shield per second after 3 seconds without taking damage'],
+      ['Recovered on victory', '90% × shield loss still remaining from the fight']
+    ],
+    note: 'Shield absorbs damage before Health. Ordinary recharge stops at your entry charge, within your current maximum. Fountain recovery can raise that limit.',
+    keywords: 'energy shield es recharge recovery maximum victory cap'
+  }
+];
 const descriptions={items:'Eight tiers of equipment. Find your base, then explore its compatible modifiers.',enemies:'Know their strengths, exploit their weaknesses, and find them in the depths.',dungeons:'Follow the descent. Explore each place, its creatures, and its bosses.',classes:'Four beginnings. Compare their starting attributes, signature passives, and specializations.',subclasses:'Choose a specialization. Explore its bonuses, abilities, and Ultimate.',skills:'Compare costs, targeting, and effects. Find the skills that fit your path.',talents:'Explore connected choices in the Talent Atlas, then take them into your build.',orbs:'From the first modifier to the final refinement. Discover what each currency can change.',affixes:'Compare prefixes and suffixes, their ranges, and compatible equipment.',pools:'Find the modifiers available to each equipment type.',enemy_skills:'Study each creature’s attacks, effects, and timing.'};
 let catalog,byId,current='items',detailReturn='items',limit=48,activeRoute='',returnFocus=null;
 // Only recognize the previous edition's exact fragments; no legacy definitions.
@@ -102,22 +154,10 @@ function abilityPreview(r){const d=r.data,p=d.params||{},parts=[];
   if(d.applies_dot)parts.push(`${t('Damage over time')}: ${val(d.applies_dot)}`);
   return parts.map(esc).join('<br>');
 }
-function mechanicsFacts(m){
-  if(m.id==='dungeon_preparation'){
-    const renderEffect=(modifier,tier)=>{let index=0;const values=[modifier.effect_pct[tier],modifier.threshold_hp_pct];return t(modifier.description).replace(/%s/g,()=>displayNumber(values[index++])).replaceAll('%%','%');};
-    return `<p>${esc(m.facts.retention.description)}</p><p>${referenceLink(m.facts.currency_id)}</p><div class="dungeon-modifiers">${m.modifiers.map(modifier=>html`<details class="modifier-reference" data-modifier="${rawEsc(modifier.id)}"><summary>${esc(modifier.name)}</summary><div class="table-wrap"><table><thead><tr><th>Tier</th><th>Condition</th><th>Materials</th><th>Consumables</th><th>XP</th></tr></thead><tbody>${Array.from({length:8},(_,tier)=>html`<tr><th scope="row">${roman[tier+1]}</th><td>${esc(renderEffect(modifier,tier))}</td><td>+${displayNumber(modifier.materials_bonus_pct[tier])}%</td><td>+${displayNumber(modifier.consumables_bonus_pct[tier])}%</td><td>+${displayNumber(modifier.xp_bonus_pct[tier])}%</td></tr>`).join('')}</tbody></table></div></details>`).join('')}</div>`;
-  }
-  if(m.id==='subclass_specialization')return facts({active_slots:m.facts.active_slots});
-  if(!m.facts)return '';
-  if(Array.isArray(m.facts))return html`<div class="table-wrap"><table><thead><tr><th>Rarity</th><th>Prefix cap</th><th>Suffix cap</th><th>Rolled total</th></tr></thead><tbody>${m.facts.map(f=>html`<tr><td>${esc(title(f.rarity))}</td><td>${esc(f.max_prefixes)}</td><td>${esc(f.max_suffixes)}</td><td>${esc(f.guaranteed_total??0)}</td></tr>`).join('')}</tbody></table></div>`;
-  const f=m.facts;
-  if(m.id==='enhancing')return facts({maximum_level:f.effective_max_level,base_stats_per_level:'+'+displayNumber(f.base_stat_pct*100)+'%',materials_per_attempt:f.materials_per_attempt,guaranteed_through:'+'+f.safe_level,success_chance:displayNumber(f.success_chance*100)+'%'});
-  if(m.id==='reforging')return facts({price_growth_per_locked_affix:`${displayNumber(f.cost_growth_factor)}×`,engraved_forge_discount:`${displayNumber((1-f.engraved_modifier.multiplier)*100)}%`})+block('Base currency cost by equipment tier',facts(Object.fromEntries(Object.entries(f.costs_by_tier).map(([k,v])=>['tier_'+k,val(v)]))));
-  if(m.id==='talent_allocation')return block('Talent points to allocate',facts(f.cost_by_kind))+block('Orbs of Regret to refund',facts(f.refund.orb_cost_by_kind));
-  if(m.id==='enemy_abilities')return facts({logical_tick:`${displayNumber(f.timing.logical_tick_seconds)} s`,telegraph:'Logical ticks for the marked boss abilities; otherwise speed-dependent action-meter fills.'});
-  return '';
+function plannerHelp(){
+  const entries=catalog.site_help||catalog.mechanics.filter(m=>m.id==='planner_scope');
+  $('planner-help').innerHTML=entries.map(m=>html`<h3>${esc(m.title)}</h3><p>${esc(m.id==='planner_scope'?'Try connected builds in the Atlas and see how many talent points they spend. The summary adds numeric talent bonuses before equipment, resonance and combat calculations.':m.description)}</p>`).join('');
 }
-function plannerHelp(){const entries=catalog.site_help||catalog.mechanics.filter(m=>m.id==='planner_scope');$('planner-help').innerHTML=entries.map(m=>html`<h3>${esc(m.title)}</h3><p>${esc(m.description)}</p>`).join('');}
 const orbBreakpoint=matchMedia('(max-width:600px)');
 function placeOrb(route){const target=route==='planner'?document.querySelector('.planner-heading'):document.querySelector('.section-title');target?.append($('orb-section-crest'));}
 function initOrb(route=activeRoute||location.hash.slice(1).split('?')[0]||'home'){
@@ -226,12 +266,52 @@ function showEntry(id){
   $('detail-body').querySelectorAll('.link-filter').forEach(input=>input.oninput=()=>input.closest('section').querySelectorAll('.reference-list a').forEach(a=>a.hidden=!a.textContent.toLowerCase().includes(input.value.toLowerCase())));document.title=`${r.name} — No Name Below`;if(!$('detail').open){returnFocus=document.activeElement;$('detail').showModal();}$('detail').scrollTop=0;watchCombatSprites();
 }
 function chapterShell(key,description){current=key;$('library').hidden=false;$('showcase').hidden=true;$('planner').hidden=true;$('collection-tools').hidden=true;$('cards').hidden=true;$('more').hidden=true;$('chapter').hidden=false;$('section-title').textContent=chapters[key][0];$('section-kicker').textContent=chapters[key][1];$('section-description').textContent=t(description);$('section-art').innerHTML='';markCollection(key);document.title=`${chapters[key][0]} — No Name Below`;}
-function showChapter(key){
-  const crafting=key==='crafting';chapterShell(key,crafting?'Choose an orb to change your equipment or refund a talent. Outcomes depend on compatible modifiers.':'Understand equipment upgrades, talent choices and combat timing.');
-  if(crafting){$('section-art').innerHTML=['chaos_orb','divine_orb'].map(id=>html`<img src="${rawEsc(primary(byId.get(id)))}" alt="">`).join('');$('chapter').innerHTML=html`<p class="guide-lead">Start with a base. Follow its compatible affixes. Choose the currency that changes what you need.</p><div class="craft-links"><a href="#items">Find equipment →</a><a href="#affixes">Inspect modifiers →</a><a href="#orbs">All currency →</a></div>${catalog.crafting.operations.map(op=>html`<section class="craft-action"><img src="${rawEsc(primary(byId.get(op.id)))}" alt="" loading="lazy"><div><p class="eyebrow">${op.target==='talent'?'TALENT REFUNDS':op.target_rarity?title(op.target_rarity)+' '+t('EQUIPMENT'):'EQUIPMENT'}</p><h3>${referenceLink(op.id)}</h3><p>${esc(op.description)}</p>${op.limitations?html`<p class="eligibility-note">${esc(op.limitations)}</p>`:''}</div></section>`).join('')}`;}
-  else {const descriptions={enhancing:'Use one stone for weapons or one tablet for armor and shields. Levels +1 through +3 are guaranteed; later attempts have a 70% chance. Ordinary failure resets enhancement to +0; blessed failure preserves it. Each level adds 5% of base stats. Jewelry and consumables cannot be enhanced.',reforging:'Spend currency to lock one random unlocked affix. Reforge does not reroll affixes or let you choose the affix. Each existing lock increases the price; Engraved Forge halves it, rounding upward.',talent_allocation:'Class origins are free. Spend talent points on connected talents. Refunds return the allocated points and require Orbs of Regret. The remaining talents must stay connected; refunded skill grants are unequipped.',enemy_abilities:'Self-buffs strengthen the creature; debuffs weaken the hero. Both also attack. Healing restores the creature without a basic attack. Cooldowns and damage-over-time use logical ticks; ordinary telegraphs use speed-dependent action-meter fills.'};$('chapter').innerHTML=html`<div class="guide-grid">${catalog.mechanics.filter(m=>m.audience!=='site_help'&&m.id!=='planner_scope').map(m=>{const target=m.id==='dungeon_preparation'||m.id==='active_dungeon_rewards'?'dungeons':m.id==='subclass_specialization'?'subclasses':m.id.startsWith('talent')?'planner':m.id==='enemy_abilities'?'enemy_skills':['enhancing','reforging'].includes(m.id)?'crafting':'affixes';return html`<section class="guide-block" id="mechanic-${rawEsc(m.id)}"><p class="eyebrow">GAME RULES</p><h3>${esc(m.title)}</h3><p>${esc(descriptions[m.id]||m.description)}</p>${mechanicsFacts(m)}<p><a href="#${target}">${target==='planner'?'Open the Talent Atlas':target==='enemy_skills'?'Study enemy abilities':target==='crafting'?'Explore crafting':target==='dungeons'?'Explore dungeons':target==='subclasses'?'Explore subclasses':'Explore affixes'} &rarr;</a></p></section>`;}).join('')}</div>`;}
+function showCrafting(){
+  chapterShell('crafting','Choose an orb to change your equipment or refund a talent. Outcomes depend on compatible modifiers.');
+  $('section-art').innerHTML=['chaos_orb','divine_orb'].map(id=>html`<img src="${rawEsc(primary(byId.get(id)))}" alt="">`).join('');
+  $('chapter').innerHTML=html`<p class="guide-lead">Start with a base. Follow its compatible affixes. Choose the currency that changes what you need.</p><div class="craft-links"><a href="#items">Find equipment →</a><a href="#affixes">Inspect modifiers →</a><a href="#orbs">All currency →</a></div>${catalog.crafting.operations.map(op=>html`<section class="craft-action"><img src="${rawEsc(primary(byId.get(op.id)))}" alt="" loading="lazy"><div><p class="eyebrow">${op.target==='talent'?'TALENT REFUNDS':op.target_rarity?title(op.target_rarity)+' '+t('EQUIPMENT'):'EQUIPMENT'}</p><h3>${referenceLink(op.id)}</h3><p>${esc(op.description)}</p>${op.limitations?html`<p class="eligibility-note">${esc(op.limitations)}</p>`:''}</div></section>`).join('')}`;
 }
-function showSearch(hash){const query=new URLSearchParams(hash.split('?')[1]||'').get('q')||'';$('global-query').value=query;chapterShell('search',query?t('Results for “{query}” across all game entities.',{query}):'Search a name, property or effect across the archive.');const q=query.trim().toLowerCase(),rows=q?catalog.records.filter(r=>r.search.includes(q)).sort((a,b)=>(b.name.toLowerCase()===q)-(a.name.toLowerCase()===q)||a.name.localeCompare(b.name)):[];$('chapter').innerHTML=html`<p class="aside-note">${t('{count} matching entries',{count:displayNumber(rows.length)})}${rows.length>100?t(' · showing the first 100; refine your search for more'):''}</p><div class="search-results">${rows.slice(0,100).map(r=>html`<a class="search-result" href="#entry/${encodeURIComponent(r.id)}">${primary(r)?html`<img src="${rawEsc(primary(r))}" alt="" loading="lazy">`:''}<div><small>${esc(categories[r.category][0])}${ultimateLabel(r)?' / '+esc(ultimateLabel(r)):''}${r.tier?' · '+t('Tier {tier}',{tier:roman[r.tier]}):''}</small><h3>${esc(r.name)}</h3><p>${esc(r.description)}</p></div></a>`).join('')||'<p class="empty"><strong>No entries found.</strong>Try a shorter name, a stat, or a collection from the menu.</p>'}</div>`;}
+
+const mechanicsLink=id=>'#mechanics?topic='+encodeURIComponent(id);
+
+function showMechanics(){
+  chapterShell('mechanics','Combat formulas and stat limits.');
+  $('chapter').innerHTML=html`
+    <p class="mechanics-build">${rawEsc(t('Rules for {version} · Android {android} · iOS {ios}',mechanicsBuilds))}</p>
+    <div class="guide-grid">
+      ${combatRules.map(({id,title,formulas,note})=>html`
+        <article class="guide-block combat-rule" id="mechanic-${id}" tabindex="-1" aria-labelledby="combat-rule-${id}">
+          <h3 id="combat-rule-${id}"><a href="${mechanicsLink(id)}">${esc(title)}</a></h3>
+          <dl class="combat-formulas">${formulas.map(([label,value])=>html`
+            <div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`).join('')}</dl>
+          <p>${esc(note)}</p>
+        </article>`).join('')}
+    </div>`;
+}
+
+function scrollToMechanic(hash){
+  const topic=new URLSearchParams(hash.split('?')[1]||'').get('topic');
+  const target=topic&&$('mechanic-'+topic);
+  if(!target||!$('chapter').contains(target))return false;
+  target.focus({preventScroll:true});
+  target.scrollIntoView({block:'start',behavior:'instant'});
+  return true;
+}
+
+function showSearch(hash){
+  const query=new URLSearchParams(hash.split('?')[1]||'').get('q')||'';
+  $('global-query').value=query;
+  chapterShell('search',query?t('Results for “{query}” across all game entities.',{query}):'Search a name, property or effect across the archive.');
+  const q=query.trim().toLowerCase();
+  const guides=q?combatRules.filter(({title,keywords})=>
+    [title,t(title),keywords,t(keywords)].join(' ').toLowerCase().includes(q)):[];
+  const rows=q?catalog.records.filter(r=>r.search.includes(q)).sort((a,b)=>(b.name.toLowerCase()===q)-(a.name.toLowerCase()===q)||a.name.localeCompare(b.name)):[];
+  const total=guides.length+rows.length;
+  const results=guides.map(article=>html`<a class="search-result" href="${mechanicsLink(article.id)}"><div>
+    <small>${esc(chapters.mechanics[0])}</small><h3>${esc(article.title)}</h3><p>${esc(article.note)}</p>
+  </div></a>`).join('')+rows.slice(0,100-guides.length).map(r=>html`<a class="search-result" href="#entry/${encodeURIComponent(r.id)}">${primary(r)?html`<img src="${rawEsc(primary(r))}" alt="" loading="lazy">`:''}<div><small>${esc(categories[r.category][0])}${ultimateLabel(r)?' / '+esc(ultimateLabel(r)):''}${r.tier?' · '+t('Tier {tier}',{tier:roman[r.tier]}):''}</small><h3>${esc(r.name)}</h3><p>${esc(r.description)}</p></div></a>`).join('');
+  $('chapter').innerHTML=html`<p class="aside-note">${t('{count} matching entries',{count:displayNumber(total)})}${total>100?t(' · showing the first 100; refine your search for more'):''}</p><div class="search-results">${results||'<p class="empty"><strong>No entries found.</strong>Try a shorter name, a stat, or a collection from the menu.</p>'}</div>`;
+}
 function showArmory(){
   const changed=current!=='items';current='items';$('home').hidden=true;$('library').hidden=false;$('showcase').hidden=false;
   $('chapter').hidden=true;$('cards').hidden=true;$('collection-tools').hidden=false;$('more').hidden=true;$('bestiary-feature').hidden=true;
@@ -287,10 +367,14 @@ function route(){
   if(activeRoute==='home'){$('library').hidden=true;$('showcase').hidden=true;document.title=t('No Name Below — The Descent Archive');}
   else if(activeRoute==='planner'){$('library').hidden=true;$('showcase').hidden=true;document.title=t('Talent Atlas')+' — No Name Below';window.libraryPlanner.open(hash);}
   else if(activeRoute==='items')showArmory();
-  else if(activeRoute==='search')showSearch(hash);else if(activeRoute==='crafting'||activeRoute==='mechanics')showChapter(activeRoute);else {showCategory(activeRoute);if(activeRoute==='sets'){$('error').textContent=t('The legacy item-set collection has been retired. Browse equipment and compatible affixes in the current archive.');$('error').hidden=false;}}
+  else if(activeRoute==='search')showSearch(hash);
+  else if(activeRoute==='crafting')showCrafting();
+  else if(activeRoute==='mechanics'){if(previous!==activeRoute)showMechanics();}
+  else {showCategory(activeRoute);if(activeRoute==='sets'){$('error').textContent=t('The legacy item-set collection has been retired. Browse equipment and compatible affixes in the current archive.');$('error').hidden=false;}}
   placeOrb(activeRoute);
   if(previous&&previous!==activeRoute){window.scrollTo({top:0,behavior:'instant'});window.NNBOrbMotion?.route(activeRoute);}
   else if(!previous)enterScene();
+  if(activeRoute==='mechanics'&&!scrollToMechanic(hash)&&previous===activeRoute)window.scrollTo({top:0,behavior:'instant'});
   watchCombatSprites();
 }
 // Route shells remain truthful and navigable while the reference payload loads.
@@ -328,6 +412,9 @@ async function init(){
   $('total').textContent=t('{count} linked entries',{count:displayNumber(catalog.records.length)});if($('snapshot-label'))$('snapshot-label').remove();const collections={...categories,crafting:chapters.crafting,mechanics:chapters.mechanics},navigation={Character:['classes','subclasses','skills','talents'],Equipment:['items','orbs','affixes','pools','crafting'],World:['enemies','dungeons','enemy_skills','mechanics']};$('categories').innerHTML=Object.entries(navigation).map(([group,keys])=>html`<div class="nav-group"><p class="nav-group-title">${group}</p>${keys.map(key=>html`<a href="#${key}" data-category="${key}"><span>${esc(collections[key][0])}</span>${catalog.counts[key]?html`<small>${catalog.counts[key]}</small>`:''}</a>`).join('')}</div>`).join('');$('collection-select').innerHTML=Object.entries(collections).map(([key,[label]])=>html`<option value="${key}">${esc(label)}</option>`).join('')+html('<option value="search">Search results</option>');$('collection-select').onchange=()=>location.hash=$('collection-select').value;
   $('global-search').onsubmit=e=>{e.preventDefault();location.hash='search?'+new URLSearchParams({q:$('global-query').value.trim()});};$('nav-toggle').onclick=()=>{const open=$('main-nav').classList.toggle('is-open');$('nav-toggle').setAttribute('aria-expanded',String(open));};filtersForCategory();const query=new URLSearchParams(location.search);if([...$('kind').options].some(o=>o.value===query.get('galleryType')))$('kind').value=query.get('galleryType');$('filters').addEventListener('submit',e=>e.preventDefault());['search','tier','kind','skill-category'].forEach(id=>$(id).addEventListener(id==='search'?'input':'change',()=>{limit=48;renderCards();}));$('filters').addEventListener('reset',()=>setTimeout(()=>{limit=48;renderCards();},0));$('more').onclick=()=>{limit+=48;renderCards();};$('close-detail').onclick=()=>location.hash=detailReturn;$('detail').addEventListener('cancel',e=>{e.preventDefault();$('close-detail').click();});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('main-nav').classList.remove('is-open');$('nav-toggle').setAttribute('aria-expanded','false');}});
+  $('chapter').addEventListener('click',event=>{
+    if(activeRoute==='mechanics'&&event.target.closest('a')?.getAttribute('href')===location.hash)scrollToMechanic(location.hash.slice(1));
+  });
   // Decoration cannot gate navigation, even if its optional module fails to initialize.
   initOrb();
   window.addEventListener('hashchange',route);route();
