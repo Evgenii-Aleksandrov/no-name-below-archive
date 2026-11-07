@@ -1043,5 +1043,19 @@
   "Damage absorbed by a normal block": "普通格挡吸收的伤害",
   "100% of damage from the hit": "该次命中伤害的 100%",
   "Add bonuses to the base chance, with a 75% cap. Compromise doubles the chance after bonuses, raises the cap to 90% and makes blocks absorb 35% of damage from the hit.": "基础格挡率加上加成后，上限为 75%。「妥协」将加成后的格挡率翻倍，上限提高到 90%，每次格挡吸收该次命中伤害的 35%。",
-  "block blocking chance cap absorption shield compromise": "格挡 格挡率 格挡上限 格挡值 吸收 盾牌 妥协"
+  "block blocking chance cap absorption shield compromise": "格挡 格挡率 格挡上限 格挡值 吸收 盾牌 妥协",
+  "After 3 seconds without damage, recharge 2.5% of your maximum shield per second. Taking damage restarts the delay.": "连续 3 秒未受到伤害后，每秒恢复最大护盾值的 2.5%。再次受到伤害时重新计时。",
+  "Recharge limit": "充能上限",
+  "Ordinary recharge restores the charge you had at the start of the fight, up to your current maximum. A fountain can raise this limit.": "普通充能可恢复至入战时的护盾量，同时受当前最大护盾值限制。泉水可以提高此上限。",
+  "Recover 90% of the charge lost in the fight that is still missing.": "恢复本场战斗中损失且尚未补回的护盾量的 90%。",
+  "The shield absorbs damage first. Any remaining damage reduces Health.": "能量护盾优先吸收伤害，剩余伤害扣除生命。",
+  "Spirit": "精神",
+  "Base Spirit": "基础精神",
+  "Number of different lore pages collected": "已收集的不同故事页面数量",
+  "Experience from enemies": "击败敌人获得的经验",
+  "+0.25% per point of Spirit": "每点精神 +0.25%",
+  "Lore pages can be found in secret rooms. The rarity bonus makes uncommon and rare items more frequent among random item drops.": "可在密室中找到故事页面。稀有度加成会提高随机掉落中优秀与稀有装备的出现比例。",
+  "spirit lore pages secret rooms experience xp rarity": "精神 故事页面 密室 经验 稀有度 掉落",
+  "Uncommon and rare loot": "优秀与稀有物品",
+  "Add 0.0025 × Spirit to their weight multiplier": "权重倍率增加 0.0025 × 精神"
 }

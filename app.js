@@ -64,10 +64,11 @@ const mechanicsRules = [
     id: 'energy-shield',
     title: 'Energy Shield',
     formulas: [
-      ['Base recharge in combat', '2.5% of maximum shield per second after 3 seconds without taking damage'],
-      ['Recovered on victory', '90% × shield loss still remaining from the fight']
+      ['Base recharge in combat', 'After 3 seconds without damage, recharge 2.5% of your maximum shield per second. Taking damage restarts the delay.'],
+      ['Recharge limit', 'Ordinary recharge restores the charge you had at the start of the fight, up to your current maximum. A fountain can raise this limit.'],
+      ['Recovered on victory', 'Recover 90% of the charge lost in the fight that is still missing.']
     ],
-    note: 'Shield absorbs damage before Health. Ordinary recharge stops at your entry charge, within your current maximum. Fountain recovery can raise that limit.',
+    note: 'The shield absorbs damage first. Any remaining damage reduces Health.',
     keywords: 'energy shield es recharge recovery maximum victory cap'
   },
   {
@@ -94,6 +95,17 @@ const mechanicsRules = [
     ],
     note: 'Contracts are checked from top to bottom. Each item counts toward at most one contract. The slot set pays once per batch. The others pay per complete group. The confirmation shows the dust and rewards.',
     keywords: 'salvage dismantle contracts recipes dust'
+  },
+  {
+    id: 'spirit',
+    title: 'Spirit',
+    formulas: [
+      ['Base Spirit', 'Number of different lore pages collected'],
+      ['Experience from enemies', '+0.25% per point of Spirit'],
+      ['Uncommon and rare loot', 'Add 0.0025 × Spirit to their weight multiplier']
+    ],
+    note: 'Lore pages can be found in secret rooms. The rarity bonus makes uncommon and rare items more frequent among random item drops.',
+    keywords: 'spirit lore pages secret rooms experience xp rarity'
   }
 ];
 const descriptions={items:'Eight tiers of equipment. Find your base, then explore its compatible modifiers.',enemies:'Know their strengths, exploit their weaknesses, and find them in the depths.',dungeons:'Follow the descent. Explore each place, its creatures, and its bosses.',classes:'Four beginnings. Compare their starting attributes, signature passives, and specializations.',subclasses:'Choose a specialization. Explore its bonuses, abilities, and Ultimate.',skills:'Compare costs, targeting, and effects. Find the skills that fit your path.',talents:'Explore connected choices in the Talent Atlas, then take them into your build.',orbs:'From the first modifier to the final refinement. Discover what each currency can change.',affixes:'Compare prefixes and suffixes, their ranges, and compatible equipment.',pools:'Find the modifiers available to each equipment type.',enemy_skills:'Study each creature’s attacks, effects, and timing.'};
