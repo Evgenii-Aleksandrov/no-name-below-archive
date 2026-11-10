@@ -320,10 +320,22 @@ function showCrafting(){
 }
 
 const mechanicsLink=id=>'#mechanics?topic='+encodeURIComponent(id);
+const combatArticle={
+  id:'damage-and-combat-modifiers',
+  title:'Damage and combat modifiers (Russian)',
+  note:'Damage types, dual wielding, active skills and Talent Atlas bonuses.',
+  keywords:'elemental mystical damage dual wield spell cooldown recovery'
+};
 
-function showMechanics(){
+function showMechanics(hash){
   chapterShell('mechanics','Combat formulas, core attributes and salvage contracts.');
+  if(new URLSearchParams(hash.split('?')[1]||'').get('topic')===combatArticle.id){
+    $('chapter').innerHTML=html`<div class="craft-links"><a href="#mechanics">All mechanics</a></div>`;
+    $('chapter').append($('combat-article-content').content.cloneNode(true));
+    return;
+  }
   $('chapter').innerHTML=html`
+    <div class="craft-links"><a href="${mechanicsLink(combatArticle.id)}">${esc(combatArticle.title)}</a></div>
     <p class="mechanics-build">${rawEsc(t('Rules for {version} · Android {android} · iOS {ios}',mechanicsBuilds))}</p>
     <div class="guide-grid">
       ${mechanicsRules.map(({id,title,formulas,note})=>html`
@@ -350,7 +362,7 @@ function showSearch(hash){
   $('global-query').value=query;
   chapterShell('search',query?t('Results for “{query}” across all game entities.',{query}):'Search a name, property or effect across the archive.');
   const q=query.trim().toLowerCase();
-  const guides=q?mechanicsRules.filter(({title,keywords})=>
+  const guides=q?[combatArticle,...mechanicsRules].filter(({title,keywords})=>
     [title,t(title),keywords,t(keywords)].join(' ').toLowerCase().includes(q)):[];
   const rows=q?catalog.records.filter(r=>r.search.includes(q)).sort((a,b)=>(b.name.toLowerCase()===q)-(a.name.toLowerCase()===q)||a.name.localeCompare(b.name)):[];
   const total=guides.length+rows.length;
@@ -416,7 +428,7 @@ function route(){
   else if(activeRoute==='items')showArmory();
   else if(activeRoute==='search')showSearch(hash);
   else if(activeRoute==='crafting')showCrafting();
-  else if(activeRoute==='mechanics'){if(previous!==activeRoute)showMechanics();}
+  else if(activeRoute==='mechanics')showMechanics(hash);
   else {showCategory(activeRoute);if(activeRoute==='sets'){$('error').textContent=t('The legacy item-set collection has been retired. Browse equipment and compatible affixes in the current archive.');$('error').hidden=false;}}
   placeOrb(activeRoute);
   if(previous&&previous!==activeRoute){window.scrollTo({top:0,behavior:'instant'});window.NNBOrbMotion?.route(activeRoute);}
