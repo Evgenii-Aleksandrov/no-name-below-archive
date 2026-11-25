@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self'; connect-src https://bytxwifkdqchoaxqqhiz.supabase.co; form-action 'none'; base-uri 'none'; object-src 'none'">
+  <title>Магазин · No Name Below</title>
+  <link rel="stylesheet" href="shop.css">
+  <script src="shop.js" type="module"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Перейти к содержимому</a>
+  <header class="masthead"><a class="brand" href="../../">NO NAME BELOW<small>THE DESCENT ARCHIVE</small></a><span class="edition">БЕТА · МАГАЗИН</span></header>
+  <main id="main">
+    <div class="intro"><p class="eyebrow">КОСМЕТИКА ИЗ ГЛУБИН</p><h1>Иной след.<br><em>Тот же путь.</em></h1><p>Визуальные эффекты для вашего героя.<br>Без изменений характеристик.</p></div>
+    <div class="shop-layout">
+      <section class="product" aria-labelledby="product-title">
+        <div class="product-top"><span class="eyebrow">НАБОР ЭФФЕКТОВ</span></div>
+        <div class="effect-pair" aria-hidden="true"><span class="fracture">✧</span><span class="pair-rule"></span><span class="flame">♨</span></div>
+        <h2 id="product-title">Fracture and Flame</h2><p class="translation">Разлом и пламя</p>
+        <div class="effects"><div><h3>РАЗЛОМ</h3><p>Анимированный эффект физического удара.</p></div><div><h3>ПЛАМЯ</h3><p>Анимированная вспышка огня при попадании.</p></div></div>
+        <p class="art-note">Символы выше обозначают два эффекта и не являются их игровым предпросмотром.</p>
+        <div class="purchase"><span id="price">Цена после входа</span></div>
+        <p id="availability">Войдите в игровой аккаунт, чтобы проверить доступность набора.</p>
+        <button id="buy" type="button" hidden>СОЗДАТЬ ЗАКАЗ</button>
+        <div id="order" hidden><p id="order-state"></p><p id="order-reference" class="reference"></p><p id="checkout-notice" hidden>Тестовая оплата. Деньги не спишутся.</p><a id="checkout" class="button" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer" hidden>ПЕРЕЙТИ К ОПЛАТЕ ↗</a><button id="refresh-order" type="button">ПРОВЕРИТЬ ЗАКАЗ</button></div>
+      </section>
+      <section class="account" aria-labelledby="account-title">
+        <p class="eyebrow">ВАШ ИГРОВОЙ АККАУНТ</p><h2 id="account-title">Продолжить путь</h2>
+        <form id="login-form" action="#" method="post"><p class="form-copy">Используйте почту и пароль существующего аккаунта No Name Below с подтверждённой почтой.</p><label for="email">Электронная почта</label><input id="email" type="email" autocomplete="username" inputmode="email" required maxlength="254" spellcheck="false" autocapitalize="none"><label for="password">Пароль</label><input id="password" type="password" autocomplete="current-password" required maxlength="1024"><button id="login" type="button">ВОЙТИ В АККАУНТ <span aria-hidden="true">→</span></button></form>
+        <div id="signed-in" hidden><p class="signed-label">ВЫ ВОШЛИ КАК</p><p id="account-email"></p><p id="account-id" class="reference"></p><button id="signout" type="button">ВЫЙТИ</button></div>
+        <p id="status" role="status" aria-live="polite" aria-atomic="true">Вход нужен для привязки заказа к вашему аккаунту.</p>
+        <div class="notice"><h3>ПЕРЕД ОПЛАТОЙ</h3><p>Это бета-версия магазина. Оплата станет доступна после подключения платёжного провайдера. Создание заказа само по себе не списывает деньги.</p><p>Данные входа отправляются напрямую в сервис авторизации игры. Сессия действует только до закрытия или перезагрузки этой страницы.</p></div>
+      </section>
+    </div>
+    <noscript><p class="notice">Для входа нужен JavaScript. Данные из этой формы не отправляются без скрипта.</p></noscript>
+  </main>
+  <footer><span>ELSEGATE STUDIO</span><a href="../../">ВЕРНУТЬСЯ В АРХИВ <span aria-hidden="true">↗</span></a><span>NO NAME BELOW</span></footer>
+</body>
+</html>
