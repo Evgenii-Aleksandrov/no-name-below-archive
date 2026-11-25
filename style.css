@@ -1,5 +1,8 @@
 @font-face{font-family:Cinzel;src:url('engine/idle-game-engine/assets/fonts/cinzel.ttf') format('truetype');font-display:swap}
 @font-face{font-family:ArchiveProse;src:url('engine/idle-game-engine/assets/fonts/cormorant-garamond/CormorantGaramond[wght].ttf') format('truetype');font-display:swap}
+/* Same Cyrillic-only 1.18 companion as cinzel_localized_regular.tres; Latin and digits keep their face. */
+@font-face{font-family:Cinzel;src:url('engine/idle-game-engine/assets/fonts/cormorant-garamond/CormorantGaramondCyrillic[wght].ttf') format('truetype');unicode-range:U+0400-052F;font-display:swap}
+@font-face{font-family:ArchiveProse;src:url('engine/idle-game-engine/assets/fonts/cormorant-garamond/CormorantGaramondCyrillic[wght].ttf') format('truetype');unicode-range:U+0400-052F;font-display:swap}
 :root{--bg:#0a100e;--panel:#141c17;--surface:#1c241b;--line:#c5aa6938;--gold:#d2b576;--muted:#a6ae9e;--text:#ece7d5;--soft:#c5cbb9;--heading:Cinzel,Georgia,serif;--body:ArchiveProse,Georgia,serif}
 body[data-locale="ru"]{--heading:Cinzel,"Times New Roman",serif;--body:ArchiveProse,"Times New Roman",serif}
 body[data-locale="zh-CN"]{--heading:"Songti SC","STSong","Noto Serif CJK SC","SimSun",serif;--body:"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif}
@@ -401,9 +404,10 @@ body:has(#showcase:not([hidden])) .library-footer{display:none}
 .combat-sprite{position:relative;overflow:hidden;aspect-ratio:1;flex:none}
 .combat-sprite .sprite-strip{position:absolute;left:0;top:0;width:var(--sheet-width);height:var(--sheet-height);max-width:none;max-height:none;object-fit:fill;animation:creature-idle var(--idle-duration,1.2s) steps(var(--idle-frames),end) infinite;animation-play-state:paused}
 .combat-sprite.is-live .sprite-strip{animation-play-state:running}
-@keyframes creature-idle{to{transform:translate3d(var(--idle-shift),0,0)}}
+/* Step viewport cells in layout: iOS compositing of the translated sheet can expose adjacent poses. */
+@keyframes creature-idle{from{left:0}to{left:var(--idle-shift)}}
 .enemy-stage{position:relative;height:330px;overflow:hidden;background:#101a15 center 45%/cover;border:1px solid var(--line);margin-bottom:16px}
-.enemy-stage .combat-sprite{width:100%;position:absolute;bottom:28px;left:0}
+.enemy-stage .combat-sprite{width:100%;position:absolute;bottom:44px;left:0}
 .enemy-stage-caption{position:absolute;bottom:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;min-height:44px;padding:8px 12px;background:#09100ecd;color:#dcc99d;font:13px var(--heading)}
 .combat-sprite.bestiary-creature{position:absolute;width:min(44%,390px);height:auto;max-height:none;right:0;bottom:12px;filter:none}
 #bestiary-feature{contain:layout paint}
@@ -436,7 +440,7 @@ body:has(#showcase:not([hidden])) .library-footer{display:none}
  .gallery-controls select{font-size:14px}.gallery-controls label{width:auto}
  .gallery-options{margin-left:auto}.gallery-options summary{font-size:12px}
  .reference-card.text-reference{grid-template-columns:minmax(0,1fr)}
- .enemy-stage{height:250px;grid-row:1;margin:0}.enemy-stage .combat-sprite{width:220px;left:calc(50% - 110px);bottom:18px}
+ .enemy-stage{height:266px;grid-row:1;margin:0}.enemy-stage .combat-sprite{width:220px;left:calc(50% - 110px)}
  .combat-sprite.bestiary-creature{width:260px;height:260px;top:0;bottom:auto;right:calc(50% - 130px)}
  #bestiary-feature{min-height:0}.bestiary-feature-copy{padding-top:250px}
 }
@@ -467,8 +471,3 @@ body:has(#content #showcase:not([hidden])) .library-footer{display:flex}
 /* Level totals and newly gained player-skill bonuses. */
 .skill-levels{width:100%;table-layout:fixed;border-collapse:collapse;font-size:15px}.skill-levels th,.skill-levels td{padding:12px 8px;vertical-align:top;border-bottom:1px solid var(--line);overflow-wrap:anywhere}.skill-levels th:first-child{width:56px}.skill-levels .metric-grid{display:block;margin:0}.skill-levels .metric{padding:5px 0}.skill-levels .metric dt,.skill-levels .metric dd{margin:0}.skill-levels .metric dd{font-size:15px}.skill-unlocks{padding:0;list-style:none;margin:0}.skill-unlocks>li+li{margin-top:12px}.skill-level-note{font-size:16px}.skill-levels td>p{margin:0;font-size:15px}
 @media(max-width:600px){.skill-levels thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}.skill-levels tbody{display:block}.skill-levels tr{display:grid;grid-template-columns:40px minmax(0,1fr)}.skill-levels th:first-child{width:auto;grid-row:span 2}.skill-levels td{grid-column:2}.skill-levels td::before{content:attr(data-label);display:block;color:var(--gold);font:11px Cinzel;margin-bottom:8px}}
-
-.modifier-reference { border-top: 1px solid var(--line,#554834); padding: .6rem 0; }
-.modifier-reference summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 600; }
-.modifier-reference table { min-width: 600px; width: 100%; }
-#mechanic-dungeon_preparation { grid-column: 1 / -1; }

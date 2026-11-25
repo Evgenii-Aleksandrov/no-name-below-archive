@@ -7,9 +7,8 @@ const title=text=>t(String(text).replaceAll('_',' ').replace(/\b\w/g,c=>c.toUppe
 // Translate fixed text in generated markup at its render boundary, never observe the live DOM.
 const html=(markup,...values)=>String(Array.isArray(markup)?markup.reduce((out,part,i)=>out+part+(i<values.length?values[i]:''),''):markup).replace(/>([^<>]+)</g,(match,source)=>{const core=source.trim(),translated=t(core);return core&&translated!==core?'>'+source.replace(core,esc(translated))+'<':match;}).replace(/(placeholder|aria-label|data-label)="([^"]+)"/g,(match,key,value)=>t(value)===value?match:`${key}="${esc(t(value))}"`);
 const roman=['','I','II','III','IV','V','VI','VII','VIII'];
-const categories={items:['Equipment & items','THE ARMORY'],orbs:['Currency & orbs','THE CRAFT'],affixes:['Affixes','PREFIXES & SUFFIXES'],skills:['Skills','THE ARTS OF COMBAT'],subclasses:['Subclasses','CHOOSE YOUR PATH'],classes:['Classes','FOUR BEGINNINGS'],talents:['Talents','THE TALENT TREE'],enemies:['Enemies','THE BESTIARY'],dungeons:['Dungeons','THE DESCENT'],enemy_skills:['Enemy abilities','KNOW YOUR ENEMY'],pools:['Affix pools','ITEM CONNECTIONS']};
-const chapters={crafting:['Crafting','THE WORK OF CURRENCY'],mechanics:['Mechanics','UNDERSTAND THE DESCENT'],search:['Search the archive','EVERY COLLECTION']};
-const mechanicsBuilds = {version: '1.0.0', android: '14', ios: '20'};
+const categories={items:['Equipment & items','THE ARMORY'],uniques:['Unique items','THE ARMORY'],orbs:['Currency & orbs','THE CRAFT'],affixes:['Affixes','PREFIXES & SUFFIXES'],skills:['Skills','THE ARTS OF COMBAT'],subclasses:['Subclasses','CHOOSE YOUR PATH'],classes:['Classes','FOUR BEGINNINGS'],talents:['Talents','THE TALENT TREE'],enemies:['Enemies','THE BESTIARY'],dungeons:['Dungeons','THE DESCENT'],enemy_skills:['Enemy abilities','KNOW YOUR ENEMY'],pools:['Affix pools','ITEM CONNECTIONS']};
+const chapters={crafting:['Crafting','THE WORK OF CURRENCY'],mechanics:['Mechanics','UNDERSTAND THE DESCENT'],scars:['Atlas of Scars','ENDGAME'],search:['Search the archive','EVERY COLLECTION']};
 const mechanicsRules = [
   {
     id: 'critical',
@@ -37,7 +36,7 @@ const mechanicsRules = [
       ['Attack hit chance before limits', '1.25 × A ÷ [A + (E ÷ 5)^0.9]'],
       ['Chance to evade', '100% − final hit chance']
     ],
-    note: 'A is accuracy, E is evasion (minimum 1 in the formula). Hit chance is usually limited to 5–100%, giving up to 95% evasion, or 98% with Alarm. Zero evasion and spell-only hits skip the check.',
+    note: 'A is accuracy, E is evasion (minimum 1 in the formula). Hit chance is usually limited to 20–100%, giving up to 80% evasion, or 90% with Alarm. Heroes and enemies can evade both attacks and spells. Zero evasion skips the check.',
     keywords: 'accuracy hit chance evade evasion dodge cap'
   },
   {
@@ -47,7 +46,7 @@ const mechanicsRules = [
       ['Block chance before bonuses', 'Block rating ÷ (Block rating + 100)'],
       ['Damage absorbed by a normal block', '100% of damage from the hit']
     ],
-    note: 'Add bonuses to the base chance, with a 75% cap. Compromise doubles the chance after bonuses, raises the cap to 90% and makes blocks absorb 35% of damage from the hit.',
+    note: 'Add bonuses to the base chance, with a 75% cap. Compromise multiplies the chance after bonuses by 1.2, up to 90%, and lets 15% of a blocked hit through.',
     keywords: 'block blocking chance cap absorption shield compromise'
   },
   {
@@ -66,7 +65,7 @@ const mechanicsRules = [
     formulas: [
       ['Base recharge in combat', 'After 3 seconds without damage, recharge 2.5% of your maximum shield per second. Taking damage restarts the delay.'],
       ['Recharge limit', 'Ordinary recharge restores the charge you had at the start of the fight, up to your current maximum. A fountain can raise this limit.'],
-      ['Recovered on victory', 'Recover 90% of the charge lost in the fight that is still missing.']
+      ['Recovered on victory', 'Recover 90% of the charge lost in the fight that is still missing (95% for Mages). Vigilance disables this recovery.']
     ],
     note: 'The shield absorbs damage first. Any remaining damage reduces Health.',
     keywords: 'energy shield es recharge recovery maximum victory cap'
@@ -75,7 +74,7 @@ const mechanicsRules = [
     id: 'attributes',
     title: 'Core attributes',
     formulas: [
-      ['Strength', '+0.5 maximum Health. +0.15 base physical damage for Warrior, Mage and Cleric. +0.3 block rating with a shield.'],
+      ['Strength', '+0.5 maximum Health. +0.15 base physical damage for Warrior, Mage and Cleric. +0.1 block rating with a shield.'],
       ['Dexterity', '+2 Accuracy, +0.5 Evasion and +0.04 percentage points to base critical chance. Rogue gains +0.1 base physical damage.'],
       ['Intelligence', '+0.15 base magic damage and +0.3 maximum Energy Shield.']
     ],
@@ -93,7 +92,7 @@ const mechanicsRules = [
       ['6 uncommon items', '1 × Orb of Doubt'],
       ['10 common items', '1 × Orb of Longing']
     ],
-    note: 'Contracts are checked from top to bottom. Each item counts toward at most one contract. The slot set pays once per batch. The others pay per complete group. The confirmation shows the dust and rewards.',
+    note: 'Contracts are checked in table order. Each item counts toward one group at most. Every complete group earns its reward. The confirmation shows the dust and rewards.',
     keywords: 'salvage dismantle contracts recipes dust'
   },
   {
@@ -109,6 +108,7 @@ const mechanicsRules = [
   }
 ];
 const descriptions={items:'Eight tiers of equipment. Find your base, then explore its compatible modifiers.',enemies:'Know their strengths, exploit their weaknesses, and find them in the depths.',dungeons:'Follow the descent. Explore each place, its creatures, and its bosses.',classes:'Four beginnings. Compare their starting attributes, signature passives, and specializations.',subclasses:'Choose a specialization. Explore its bonuses, abilities, and Ultimate.',skills:'Compare costs, targeting, and effects. Find the skills that fit your path.',talents:'Explore connected choices in the Talent Atlas, then take them into your build.',orbs:'From the first modifier to the final refinement. Discover what each currency can change.',affixes:'Compare prefixes and suffixes, their ranges, and compatible equipment.',pools:'Find the modifiers available to each equipment type.',enemy_skills:'Study each creature’s attacks, effects, and timing.'};
+descriptions.uniques='Unique effects, modifier types and eligible bases.';
 let catalog,byId,current='items',detailReturn='items',limit=48,activeRoute='',returnFocus=null;
 // Only recognize the previous edition's exact fragments; no legacy definitions.
 const retiredSetIds=new Set(['set_apprentice_blades','set_arcane_ascendancy','set_gravefrost_vigil','set_iron_bulwark','set_mystic_trappings','set_stormcaller','set_training_guardian','set_void_walker','set_voidweave']);
@@ -118,15 +118,17 @@ const displayNumber=n=>window.NNBI18n.number(n);
 const displayRange=(v,format)=>{const shown=v.map(format);return v.length===2&&typeof v[0]==='number'&&shown[0]===shown[1]?shown[0]:shown.join(' – ');};
 const mechanicValueLabels={single_attack_burst:'Single-target attack burst',aoe_damage:'Area damage',all_enemies:'All enemies',aoe:'Area of effect',single_enemy:'Single enemy'};
 const val=v=>Array.isArray(v)?displayRange(v,val):typeof v==='object'&&v!==null?Object.entries(v).map(([k,x])=>`${labelOf(k)}: ${val(x)}`).join(' · '):typeof v==='number'?displayNumber(v):typeof v==='boolean'?(t(v?'Yes':'No')):typeof v==='string'?(t(mechanicValueLabels[v])||(/^[a-z][a-z_]+$/.test(v)?title(v):v)):String(v??'');
-const kind=r=>r.data.item_type||r.data.affix_type||r.data.class_id||r.data.kind||r.data.damage_type||'';
+const kind=r=>r.category==='uniques'?r.data.slot:r.data.item_type||r.data.affix_type||r.data.class_id||r.data.kind||r.data.damage_type||'';
 const ultimateLabel=r=>r.data.is_ultimate===true?(t(r.data.is_class_default===true?'Class Ultimate':'Subclass Ultimate')):'';
 const primary=r=>r?.art?.primary?.url||r?.image||'';
 const referenceLink=id=>{const r=byId.get(id);return r?html`<a href="#entry/${encodeURIComponent(id)}">${esc(r.name)}${r.tier?` <small>· T${r.tier}</small>`:''}</a>`:'';};
-function stats(r){const d=r.data,raw=d.specialization_bonuses||d.stat_bonuses||d.passive_effects||d.base_stats||Object.fromEntries(Object.entries(d).filter(([k])=>k.startsWith('base_')||k.endsWith('_damage_flat')));return Array.isArray(raw)?Object.fromEntries(raw.filter(s=>s?.type&&s.value!==undefined).map(s=>[s.type,s.value])):Object.fromEntries(Object.entries(raw).map(([k,v])=>v&&typeof v==='object'&&!Array.isArray(v)&&v.value!==undefined?[v.type||k,v.value]:[k,v]));}
-function statText(key,value,talent=false){const display=catalog.stat_display[key],label=t((talent&&catalog.talent_labels?.[key])||readableLabels[key]||display?.label||labelOf(key.replace(/^base_/,'')));const suffix=t(['crit_chance_flat','crit_multiplier_flat'].includes(key)?' percentage points':display?.suffix||'');const format=x=>typeof x==='number'?`${displayNumber(x*(display?.scale||1))}${suffix}`:val(x);return [label,Array.isArray(value)?displayRange(value,format):format(value)];}
-function facts(data,formattedStats=false,talent=false){const rows=Object.entries(data||{}).filter(([,v])=>v!==undefined&&v!==null&&v!==''&&!(typeof v==='object'&&!Object.keys(v).length));return rows.length?html`<dl class="facts metric-grid">${rows.map(([k,v])=>{const [label,value]=formattedStats?statText(k,v,talent):[labelOf(k),val(v)];return html`<div class="metric"><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`;}).join('')}</dl>`:'';}
+function stats(r){if(r.category==='uniques')return {};const d=r.data,raw=d.specialization_bonuses||d.stat_bonuses||d.passive_effects||d.base_stats||Object.fromEntries(Object.entries(d).filter(([k])=>k.startsWith('base_')));return Array.isArray(raw)?Object.fromEntries(raw.filter(s=>s?.type&&s.value!==undefined).map(s=>[s.type,s.value])):Object.fromEntries(Object.entries(raw).map(([k,v])=>v&&typeof v==='object'&&!Array.isArray(v)&&v.value!==undefined?[v.type||k,v.value]:[k,v]));}
+function modifierIsGlobal(key,item){const explicit=key.startsWith('global_');key=key.replace(/^global_/,'');const damage=/^(phys|magic|fire|frost|lightning|holy|dark|poison)_damage_(flat|min|max|pct)$/.test(key),defence={armor_flat:'base_armor',armor_pct:'base_armor',evasion_flat:'base_evasion',evasion_pct:'base_evasion',energy_shield_flat:'base_energy_shield',es_flat:'base_energy_shield',es_pct:'base_energy_shield'}[key];if(!damage&&!defence)return false;if(explicit)return true;if(!item)return false;if(item.item_type==='weapon')return !damage;return !defence||!['armor','helmet','gloves','boots','legs','belt','shield'].includes(item.item_type)||!item[defence];}
+function statText(key,value,item=null){const canonical=key.replace(/^global_/,''),display=catalog.stat_display[key]||catalog.stat_display[canonical];let label=t(display?.label||readableLabels[canonical]||labelOf(canonical.replace(/^base_/,'')));if(modifierIsGlobal(key,item))label=t('Global: {stat}',{stat:label});const suffix=t(['crit_chance_flat','crit_multiplier_flat'].includes(key)?' percentage points':display?.suffix||'');const format=x=>typeof x==='number'?`${displayNumber(x*(display?.scale||1))}${suffix}`:val(x);return [label,Array.isArray(value)?displayRange(value,format):format(value)];}
+function facts(data,formattedStats=false,item=null){const rows=Object.entries(data||{}).filter(([,v])=>v!==undefined&&v!==null&&v!==''&&!(typeof v==='object'&&!Object.keys(v).length));return rows.length?html`<dl class="facts metric-grid">${rows.map(([k,v])=>{const [label,value]=formattedStats?statText(k,v,item):[labelOf(k),val(v)];return html`<div class="metric"><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`;}).join('')}</dl>`:'';}
 function bonusText(key,value){const [label,shown]=statText(key,value);return `${value>0?'+':''}${key==='block_chance_pct'?displayNumber(value)+t(' percentage points'):shown} ${label.toLowerCase()}`;}
 function playerDescription(r,detail=false){
+  if(r.category==='talents'&&Object.keys(r.data.passive_effects||{}).length&&!r.data.talent_effects?.length)return '';
   if(r.description)return r.description;
   const d=r.data;
   if(r.category==='classes'){const base=stats(r);return t('{class} uses {resource} and {damage} attacks.',{class:title(d.class_id),resource:val(base.resource_type),damage:val(base.attack_damage_type)})+(detail?'':' '+d.class_passive.description);}
@@ -137,7 +139,7 @@ function playerDescription(r,detail=false){
 }
 function referenceCard(id){const r=byId.get(id);if(!r)return '';const d=r.data,metrics=[];
   if(r.tier)metrics.push(t('Tier {tier}',{tier:roman[r.tier]||displayNumber(r.tier)}));
-  if(['skills','enemy_skills'].includes(r.category)){if(d.damage_type)metrics.push(title(d.damage_type));if(d.resource_cost)metrics.push(`${d.resource_cost.amount} ${title(d.resource_cost.type)}`);if(typeof d.cooldown_seconds==='number')metrics.push(t('{seconds} s cooldown',{seconds:displayNumber(d.cooldown_seconds)}));else if(typeof d.cooldown_ticks==='number')metrics.push(t('{time} cooldown',{time:logicalTime(d.cooldown_ticks)}));if(d.targeting)metrics.push(val(d.targeting));if(typeof d.params?.damage_multiplier==='number')metrics.push(t('{value}× damage input',{value:displayNumber(d.params.damage_multiplier)}));}
+  if(['skills','enemy_skills'].includes(r.category)){const damageType=abilityDamageType(d);if(damageType)metrics.push(damageType);if(d.resource_cost)metrics.push(`${d.resource_cost.amount} ${title(d.resource_cost.type)}`);if(typeof d.cooldown_seconds==='number')metrics.push(t('{seconds} s cooldown',{seconds:displayNumber(d.cooldown_seconds)}));else if(typeof d.cooldown_ticks==='number')metrics.push(t('{time} cooldown',{time:logicalTime(d.cooldown_ticks)}));if(d.targeting)metrics.push(val(d.targeting));if(typeof d.params?.damage_multiplier==='number')metrics.push(t('{value}× damage input',{value:displayNumber(d.params.damage_multiplier)}));}
   else if(r.category==='subclasses')metrics.push(...Object.entries(d.specialization_bonuses||{}).map(([k,v])=>bonusText(k,v)));
   else if(r.category==='enemies'){if(stats(r).hp)metrics.push(`${val(stats(r).hp)} ${t('HP')}`);if(d.attack_damage_type)metrics.push(title(d.attack_damage_type));}
   else if(r.category==='classes'){metrics.push(`${displayNumber(stats(r).hp)} ${t('HP')}`,title(stats(r).resource_type));}
@@ -147,16 +149,20 @@ function referenceCard(id){const r=byId.get(id);if(!r)return '';const d=r.data,m
 }
 function art(r){const image=primary(r);return image?html`<div class="card-art">${r.tier?html`<span class="tier-chip">${t('TIER')} ${roman[r.tier]||esc(r.tier)}</span>`:''}<img src="${rawEsc(image)}" alt="" loading="lazy" decoding="async"></div>`:'';}
 const logicalTime=ticks=>t('{seconds} s ({ticks} logical ticks)',{seconds:displayNumber(ticks*.5),ticks:displayNumber(ticks)});
+const damageTypeLabel=type=>type==='magic'?t('Arcane'):title(type);
+const abilityDamageType=d=>d.damage_type&&d.damage_type!=='none'&&!['heal','self_buff','enemy_debuff'].includes(d.effect_type)?damageTypeLabel(d.damage_type):'';
 function abilityFacts(d){
   const out={};
   if(d.effect_type||d.effect)out.effect=d.effect_type||d.effect;
-  for(const key of ['damage_type','targeting','target_mode'])if(d[key]!==undefined)out[key]=d[key];
+  for(const key of ['targeting','target_mode'])if(d[key]!==undefined)out[key]=d[key];
+  const damageType=abilityDamageType(d);if(damageType)out.damage_type=damageType;
   if(typeof d.damage_mult==='number')out.damage_multiplier=`${displayNumber(d.damage_mult)}×`;
   if(d.resource_cost)out.resource_cost=`${d.resource_cost.amount} ${title(d.resource_cost.type)}`;
   for(const key of ['cooldown_ticks','initial_cooldown_ticks'])if(typeof d[key]==='number')out[key.replace('_ticks','')]=logicalTime(d[key]);
   if(typeof d.telegraph_ticks==='number')out.telegraph=d.telegraph_clock==='logical'?logicalTime(d.telegraph_ticks):t('{count} meter fills (speed-dependent)',{count:displayNumber(d.telegraph_ticks)});
   for(const [key,value] of Object.entries(d.params||{}))out[key]=key==='duration_ticks'&&typeof value==='number'?logicalTime(value):key.endsWith('_multiplier')&&typeof value==='number'?`${displayNumber(value)}\u00d7`:value;
   if(d.applies_dot)out.damage_over_time={...d.applies_dot,...(typeof d.applies_dot.ticks==='number'?{duration:logicalTime(d.applies_dot.ticks)}:{})};
+  if(d.applies_control)out.control={effect:d.applies_control.status_type,duration:logicalTime(d.applies_control.duration_ticks)};
   if(d.tags?.length)out.tags=d.tags;
   return out;
 }
@@ -177,8 +183,26 @@ function skillEffectFacts(values){
   }
   return facts(out);
 }
+function passiveRankFacts(values){
+  const labels={
+    damage_pct:'More damage',guard_pct:'Less damage taken',rage_per_hit:'Rage per hit',
+    leech_pct:'Life leech and max Life/s limit',reflect_pct:'Reflected offensive damage',
+    duration_pct:'Increased duration',slow_pct:'Action meter slow',recharge_delay_pct:'Shorter ES recharge delay',
+    refund_pct:'Paid Mana refunded',es_more_pct:'More maximum ES',crit_chance_pp:'Critical chance',
+    crit_multi_more_pct:'More critical multiplier',guard_per_charge_pct:'Less damage per charge',
+    guard_per_stack_pct:'Less damage per Poison stack',healing_damage_pct:'Restored Life dealt as Holy damage',
+    max_resist_pp:'Maximum resistances',
+  };
+  return facts(Object.fromEntries(Object.entries(values).map(([key,value])=>[
+    labels[key]||labelOf(key),displayNumber(value)+(key.endsWith('_pp')?t(' percentage points'):key.endsWith('_pct')?'%':'')
+  ])));
+}
 function skillProgression(r){
   const d=r.data;
+  if(d.passive_ranks?.length){
+    const rows=d.passive_ranks.map((rank,i)=>html`<tr data-level="${i+1}"><th scope="row">${i+1}</th><td data-label="Effect values">${passiveRankFacts(rank)}</td></tr>`).join('');
+    return block('Skill levels',html`<table class="skill-levels"><thead><tr><th scope="col">Level</th><th scope="col">Effect values</th></tr></thead><tbody>${rows}</tbody></table>`);
+  }
   if(d.is_class_default)return block('Skill levels','<p>This class Ultimate has a fixed effect.</p>');
   const max=Number(d.max_level);if(!Number.isInteger(max)||max<1)return '';
   const kindLabels={self_buff_extension:'Self buff',dot_rider:'Damage over time',debuff_on_hit:'On-hit debuff',aoe_or_multi_target:'Area and targets',lifesteal_on_hit:'Life steal',cooldown_reset:'Cooldown',splash:'Splash damage',mark_charge:'Mark effects'};
@@ -193,7 +217,8 @@ function skillProgression(r){
   return block('Skill levels',html`<p class="skill-level-note">Values are totals at each level. Earlier bonuses remain active; other base effects stay unchanged.</p><table class="skill-levels"><thead><tr><th scope="col">Level</th><th scope="col">Effect values</th><th scope="col">Bonuses gained</th></tr></thead><tbody>${rows}</tbody></table>`);
 }
 function abilityPreview(r){const d=r.data,p=d.params||{},parts=[];
-  if(d.effect_type||d.effect)parts.push(val(d.effect_type||d.effect));if(d.damage_type)parts.push(title(d.damage_type));
+  if(d.passive_ranks?.length)return esc('Equipped passive');
+  if(d.effect_type||d.effect)parts.push(val(d.effect_type||d.effect));const damageType=abilityDamageType(d);if(damageType)parts.push(damageType);
   if(typeof (p.damage_multiplier??d.damage_mult)==='number')parts.push(t('{value}× attack input',{value:displayNumber(p.damage_multiplier??d.damage_mult)}));
   if(d.resource_cost)parts.push(`${d.resource_cost.amount} ${title(d.resource_cost.type)}`);if(typeof d.cooldown_ticks==='number')parts.push(t('Cooldown {time}',{time:logicalTime(d.cooldown_ticks)}));
   if(d.targeting)parts.push(Object.hasOwn(mechanicValueLabels,d.targeting)?val(d.targeting):title(d.targeting));if(typeof p.duration_ticks==='number')parts.push(t('Duration {time}',{time:logicalTime(p.duration_ticks)}));
@@ -214,9 +239,9 @@ function initOrb(route=activeRoute||location.hash.slice(1).split('?')[0]||'home'
 orbBreakpoint.addEventListener('change',()=>{if(catalog)initOrb();});
 window.addEventListener('pagehide',()=>window.NNBOrbMotion?.destroy());
 window.addEventListener('pageshow',e=>{if(e.persisted&&catalog)initOrb();});
-function card(r,gallery=false){const preview=Object.entries(stats(r)).filter(([,v])=>typeof v==='number'?v!==0:Array.isArray(v)?v.some(x=>x!==0):true).slice(0,2).map(([k,v])=>r.category==='subclasses'?bonusText(k,v):statText(k,v,r.category==='talents').join(' ')).join(' · '),ability=['skills','enemy_skills'].includes(r.category);return html`<a class="card" href="#entry/${encodeURIComponent(r.id)}" aria-label="${esc(r.name)}${r.tier?', '+t('Tier {tier}',{tier:displayNumber(r.tier)}):''}">${art(r)}<div class="card-body"><div class="card-meta">${esc([ultimateLabel(r),val(r.data.weapon_type||kind(r)),val(r.data.slot)].filter(Boolean).join(' / ')||categories[r.category][0])}${r.category==='enemies'&&r.tier?' · '+t('TIER')+' '+roman[r.tier]:''}</div><h3>${esc(r.name)}</h3>${gallery?'':`${playerDescription(r)?html`<p>${esc(playerDescription(r))}</p>`:''}${ability?html`<div class="stat-preview">${abilityPreview(r)}</div>`:preview?html`<div class="stat-preview">${esc(preview)}</div>`:''}`}</div></a>`;}
+function card(r,gallery=false){const preview=Object.entries(stats(r)).filter(([,v])=>typeof v==='number'?v!==0:Array.isArray(v)?v.some(x=>x!==0):true).slice(0,2).map(([k,v])=>r.category==='subclasses'?bonusText(k,v):statText(k,v).join(' ')).join(' · '),ability=['skills','enemy_skills'].includes(r.category);return html`<a class="card" href="#entry/${encodeURIComponent(r.id)}" aria-label="${esc(r.name)}${r.tier?', '+t('Tier {tier}',{tier:displayNumber(r.tier)}):''}">${art(r)}<div class="card-body"><div class="card-meta">${esc([ultimateLabel(r),val(kind(r)),val(r.data.slot)].filter(Boolean).join(' / ')||categories[r.category][0])}${r.category==='enemies'&&r.tier?' · '+t('TIER')+' '+roman[r.tier]:''}</div><h3>${esc(r.name)}</h3>${gallery?'':`${playerDescription(r)?html`<p>${esc(playerDescription(r))}</p>`:''}${ability?html`<div class="stat-preview">${abilityPreview(r)}</div>`:preview?html`<div class="stat-preview">${esc(preview)}</div>`:''}`}</div></a>`;}
 function eligibleTypes(r){return [...new Set(r.links.filter(l=>l.relation==='Eligible equipment').map(l=>{const d=byId.get(l.id).data;return title(d.weapon_family||d.armor_class||d.item_type);} ))].sort();}
-function filtersForCategory(){$('skill-category-filter').hidden=current!=='skills';const rows=catalog.records.filter(r=>r.category===current);$('tier').innerHTML=html('<option value="">All tiers</option>')+[...new Set(rows.map(r=>r.tier).filter(Boolean))].sort((a,b)=>a-b).map(tier=>html`<option value="${tier}">${t('Tier {tier}',{tier:roman[tier]||displayNumber(tier)})}</option>`).join('');$('kind').innerHTML=html('<option value="">All types</option>')+[...new Set(rows.map(kind).filter(Boolean))].sort().map(k=>html`<option value="${rawEsc(k)}">${esc(title(k))}</option>`).join('');}
+function filtersForCategory(){$('skill-category-filter').hidden=current!=='skills';$('tier').closest('label').hidden=current==='uniques';const rows=catalog.records.filter(r=>r.category===current);$('tier').innerHTML=html('<option value="">All tiers</option>')+[...new Set(rows.map(r=>r.tier).filter(Boolean))].sort((a,b)=>a-b).map(tier=>html`<option value="${tier}">${t('Tier {tier}',{tier:roman[tier]||displayNumber(tier)})}</option>`).join('');$('kind').innerHTML=html('<option value="">All types</option>')+[...new Set(rows.map(kind).filter(Boolean))].sort().map(k=>html`<option value="${rawEsc(k)}">${esc(title(k))}</option>`).join('');}
 function renderCards(){
   if(current==='items'){renderGallery();return;}
   const q=$('search').value.trim().toLowerCase(),tier=$('tier').value,type=$('kind').value,skillCategory=$('skill-category').value;
@@ -236,7 +261,7 @@ const combatArt=r=>r?.art?.secondary?.find(a=>a.role==='combat_sheet'&&a.sprite)
 function combatSprite(r,className=''){
   const art=combatArt(r);if(!art)return '';
   const {columns,rows,idle_frames:frames,idle_fps:fps}=art.sprite;
-  return html`<div class="combat-sprite ${className}" role="img" aria-label="${esc(t('{name} in combat',{name:r.name}))}" style="--sheet-width:${columns*100}%;--sheet-height:${rows*100}%;--idle-shift:${-frames/columns*100}%;--idle-frames:${frames};--idle-duration:${frames/(fps||5)}s"><img class="sprite-strip" src="${rawEsc(art.url)}" alt="" decoding="async"></div>`;
+  return html`<div class="combat-sprite ${className}" role="img" aria-label="${esc(t('{name} in combat',{name:r.name}))}" style="--sheet-width:${columns*100}%;--sheet-height:${rows*100}%;--idle-shift:${-frames*100}%;--idle-frames:${frames};--idle-duration:${frames/(fps||5)}s"><img class="sprite-strip" src="${rawEsc(art.url)}" alt="" decoding="async"></div>`;
 }
 function enemyStage(r){
   if(!combatArt(r))return '';
@@ -291,25 +316,44 @@ function enterScene(){
 }
 sceneReduced.addEventListener('change',()=>{if(sceneReduced.matches)clearSceneMotion();watchCombatSprites();});
 function block(heading,body){return body?html`<section class="detail-block"><h3>${esc(heading)}</h3>${html(body)}</section>`:'';}
+function uniqueDetails(data){
+  const labels=keys=>keys.map(key=>esc(statText(key,0)[0])).join(' · ');
+  const bases=data.base_ids.map(id=>`<li>${referenceLink(id)}</li>`).join('');
+  const affixes=data.fixed_affixes.map(affix=>`<li><strong>${esc(title(affix.affix_type))}</strong> · ${labels(affix.stat_types)}</li>`).join('');
+  return block('Eligible bases',bases&&`<ul class="unique-bases">${bases}</ul>`)+
+    block('Implicit bonuses',labels(data.implicit_types))+
+    block('Fixed modifiers',affixes&&`<ul class="specialization-bonuses">${affixes}</ul>`);
+}
+function enemyMechanics(data){
+  const effects=['special_mechanic','secondary_mechanic','status_application','secondary_damage_type','secondary_status_application','tertiary_damage_type','tertiary_status_application'];
+  const ratios=['status_application_chance','secondary_status_application_chance','tertiary_status_application_chance',
+    'enrage_hp_threshold','berserker_hp_threshold','guardian_phase2_hp_threshold','vampiric_heal_ratio',
+    'self_heal_hp_ratio','self_heal_trigger_hp','pack_atk_bonus','formation_atk_bonus','void_true_damage_ratio'];
+  const multipliers=['enrage_atk_mult','enrage_spd_mult','berserker_atk_mult','guardian_phase2_atk_mult','guardian_phase2_def_mult'];
+  const values=Object.fromEntries(effects.filter(key=>data[key]).map(key=>[key,data[key]]));
+  for(const key of ratios)if(typeof data[key]==='number')values[key]=`${displayNumber(data[key]*100)}%`;
+  for(const key of multipliers)if(typeof data[key]==='number')values[key]=`×${displayNumber(data[key])}`;
+  return block('Special mechanics',facts(values));
+}
 function showEntry(id){
   const r=byId.get(id);if(!r){$('error').textContent=t(retiredSetIds.has(id)?'This legacy item-set entry has been retired. Browse equipment and compatible affixes in the current archive.':'This entry could not be found. Choose a collection to continue.');$('error').hidden=false;return;}
-  const d=r.data,image=primary(r);const info=Object.fromEntries(['tier','tier_label','item_type','slot','rarity','armor_class','weapon_family','weapon_type','handedness','affix_type','affix_group','effect','damage_mult','is_ultimate','is_class_default','cooldown_seconds','resource_cost','resource_type','damage_type','attack_damage_type','targeting','max_level','cost','max_stack','max_suffixes','xp_reward','size_class'].filter(k=>d[k]!==undefined).map(k=>[k,d[k]]));if(r.category==='affixes')info.eligible_equipment_types=eligibleTypes(r);if(r.category==='enemy_skills'){Object.keys(info).forEach(k=>delete info[k]);Object.assign(info,abilityFacts(d));}
+  const d=r.data,image=primary(r);const info=Object.fromEntries(['tier','tier_label','item_type','slot','rarity','armor_class','weapon_family','weapon_type','handedness','affix_type','affix_group','effect','damage_mult','is_ultimate','is_class_default','cooldown_seconds','resource_cost','resource_type','damage_type','attack_damage_type','targeting','max_level','cost','max_stack','max_affixes','max_prefixes','max_suffixes','xp_reward','size_class'].filter(k=>d[k]!==undefined).map(k=>[k,d[k]]));if(r.category==='affixes')info.eligible_equipment_types=eligibleTypes(r);if(r.category==='enemy_skills'){Object.keys(info).forEach(k=>delete info[k]);Object.assign(info,abilityFacts(d));}
   const groups={};for(const l of r.links){(groups[l.relation]??=[]);if(!groups[l.relation].includes(l.id))groups[l.relation].push(l.id);}
   if(r.category==='classes'){groups['Class Ultimate']=(groups.Skill||[]).filter(id=>byId.get(id)?.data.is_class_default);groups.Skill=(groups.Skill||[]).filter(id=>!byId.get(id)?.data.is_class_default);}
   const relationLabels={'Ability':'Abilities','Enemy':'Enemies','Boss':'Boss','Dungeon':'Dungeon','Skill':'Skills','Subclass':'Specializations','Class':'Class','Found in dungeon':'Habitats','Used by enemy':'Used by','Starting skill':'Starting skills'},priority={'Starting skill':0,'Class Ultimate':1,Subclass:2,Skill:3};
   const relationships=Object.entries(groups).filter(([,ids])=>ids.length).sort((a,b)=>r.category==='classes'?(priority[a[0]]??4)-(priority[b[0]]??4):0);
   const linkBlocks=relationships.map(([rel,ids])=>{const body=`${rel==='Eligible equipment'||rel==='Can roll'?'<p class="eligibility-note">Common items have no rolled affixes. Rarity, available prefix/suffix slots and existing modifier groups constrain a particular roll.</p><label class="link-filter-label">Filter these results <input class="link-filter" type="search" placeholder="Name or tier…"></label>':''}<div class="reference-list">${ids.map(referenceCard).join('')}</div>`;return r.category==='classes'&&rel==='Skill'?html`<details class="more-related"><summary>${esc(t('All {class} skills ({count})',{class:title(d.class_id),count:displayNumber(ids.length)}))}</summary>${body}</details>`:block(relationLabels[rel]||rel,body);});
-  const links=r.category==='classes'?html`<div class="opening-abilities">${linkBlocks.slice(0,2).join('')}</div>${linkBlocks.slice(2).join('')}`:linkBlocks.join('');
+  const links=r.category==='uniques'?uniqueDetails(d):r.category==='classes'?html`<div class="opening-abilities">${linkBlocks.slice(0,2).join('')}</div>${linkBlocks.slice(2).join('')}`:r.category==='enemies'?enemyMechanics(d)+linkBlocks.join(''):linkBlocks.join('');
   const lore=['enemies','dungeons'].includes(r.category),ability=['skills','enemy_skills'].includes(r.category),flavor=r.explanations?.flavor||d.flavor,description=playerDescription(r,true);$('detail-body').className=`detail-${r.category}`;
   for(const key of ['damage_mult','is_ultimate','is_class_default','affix_group'])delete info[key];
   if(r.category!=='enemy_skills')delete info.effect;
   if(d.resource_cost)info.resource_cost=`${d.resource_cost.amount} ${title(d.resource_cost.type)}`;
-  if(r.category==='skills'){delete info.cooldown_seconds;Object.assign(info,abilityFacts(d));}
+  if(r.category==='skills'){delete info.cooldown_seconds;if(!d.passive_id)Object.assign(info,abilityFacts(d));}
   if(r.category==='dungeons')for(const key of ['tier_min','tier_max','required_gear_score','recommended_hero_power','layers'])if(d[key]!==undefined)info[key]=d[key];
   const statValues=r.category==='subclasses'?{}:stats(r),resistances=Object.fromEntries(Object.entries(d.resistances||{}).map(([k,v])=>[k,`${displayNumber(v*100)}%`]));
-  const sidebar=`${r.category==='enemies'&&combatArt(r)?enemyStage(r):image?html`<img class="detail-portrait" src="${rawEsc(image)}" alt="${esc(r.name)}">`:''}${block('At a glance',facts({...info,...(r.category==='enemies'?{}:statValues)},true,r.category==='talents'))}${block('Resistances',facts(resistances))}${block('Requirements',facts(d.requirements,true))}${block('Implicit bonuses',facts(d.implicit_bonuses,true))}`;
+  const sidebar=`${r.category==='enemies'&&combatArt(r)?enemyStage(r):image?html`<img class="detail-portrait" src="${rawEsc(image)}" alt="${esc(r.name)}">`:''}${block('At a glance',facts({...info,...(r.category==='enemies'?{}:statValues)},true))}${block('Resistances',facts(resistances))}${block('Requirements',facts(d.requirements,true))}${block('Implicit bonuses',facts(d.implicit_bonuses,true,d))}`;
   const bonuses=d.specialization_bonuses?html`<ul class="specialization-bonuses">${Object.entries(d.specialization_bonuses).map(([k,v])=>html`<li>${esc(bonusText(k,v))}</li>`).join('')}</ul>`:'';
-  $('detail-body').innerHTML=html`<div class="detail-topline"><a href="#${r.category}">${esc(categories[r.category][0])}</a><span>/</span>${esc(r.name)}</div><div class="detail-layout${sidebar?'':' text-only-detail'}">${sidebar?'<aside class="detail-sidebar">'+sidebar+'</aside>':''}<div class="detail-main"><div class="detail-top text-detail"><div><p class="eyebrow">${esc(categories[r.category][0])}${ultimateLabel(r)?' / '+esc(ultimateLabel(r)):''}${r.tier?' / '+t('TIER')+' '+roman[r.tier]:''}</p><h2 id="detail-title">${esc(r.name)}</h2>${description?`${lore?'<span class="flavor-label">Lore</span>':''}<p${lore?' class="flavor-text"':''}>${esc(description)}</p>`:''}${flavor&&flavor!==description?html`<span class="flavor-label">Flavor text</span><p class="flavor-text">${esc(flavor)}</p>`:''}${r.category==='talents'?html`<a class="primary-link" href="#planner?node=${r.id}">Inspect in Talent Atlas →</a>`:''}</div></div>${r.category==='enemies'?block('Combat properties',facts(statValues,true)):''}${d.class_passive?block(title(d.class_passive.id),html`<p>${esc(d.class_passive.description)}</p>`):''}${block('Specialization bonuses',bonuses)}${r.category==='skills'?skillProgression(r):d.level_scaling?block('Per rank',facts(d.level_scaling,true)):''}${d.equipment_level_scaling?block('Equipment skill levels',html`<p>Equipment levels add numeric scaling only; trained ranks still control rank bonuses.</p>${facts(d.equipment_level_scaling)}`):''}${r.progression?block('Along the descent',html`<p>${esc(t('Dungeon {ordinal} of {count}.',{ordinal:displayNumber(r.progression.ordinal),count:displayNumber(catalog.dungeon_sequence?.length||22)}))}</p><nav class="descent-links" aria-label="Dungeon sequence">${r.progression.previous_id?referenceCard(r.progression.previous_id):''}${r.progression.next_id?referenceCard(r.progression.next_id):''}</nav>`):''}${ability?block('Timing and damage','<p>Damage multipliers describe attack inputs; defenses affect final damage. Logical ticks last 0.5 seconds. Action-meter telegraphs depend on enemy speed.</p>'):''}${r.mechanics?block('Crafting operation',html`<p>${esc(r.mechanics.description)}</p>${r.mechanics.limitations?html`<p class="eligibility-note">${esc(r.mechanics.limitations)}</p>`:''}<a class="text-link" href="#crafting">Compare currency operations →</a>`):''}${links}</div></div>`;
+  $('detail-body').innerHTML=html`<div class="detail-topline"><a href="#${r.category}">${esc(categories[r.category][0])}</a><span>/</span>${esc(r.name)}</div><div class="detail-layout${sidebar?'':' text-only-detail'}">${sidebar?'<aside class="detail-sidebar">'+sidebar+'</aside>':''}<div class="detail-main"><div class="detail-top text-detail"><div><p class="eyebrow">${esc(categories[r.category][0])}${ultimateLabel(r)?' / '+esc(ultimateLabel(r)):''}${r.tier?' / '+t('TIER')+' '+roman[r.tier]:''}</p><h2 id="detail-title">${esc(r.name)}</h2>${description?`${lore?'<span class="flavor-label">Lore</span>':''}<p${lore?' class="flavor-text"':''}>${esc(description)}</p>`:''}${flavor&&flavor!==description?html`<span class="flavor-label">Flavor text</span><p class="flavor-text">${esc(flavor)}</p>`:''}${r.category==='talents'?html`<a class="primary-link" href="#planner?node=${r.id}">Inspect in Talent Atlas →</a>`:''}</div></div>${r.category==='enemies'?block('Combat properties',facts(statValues,true)):''}${d.class_passive?block(title(d.class_passive.id),html`<p>${esc(d.class_passive.description)}</p>`):''}${block('Specialization bonuses',bonuses)}${r.category==='skills'?skillProgression(r):d.level_scaling?block('Per rank',facts(d.level_scaling,true)):''}${r.progression?block('Along the descent',html`<p>${esc(t('Dungeon {ordinal} of {count}.',{ordinal:displayNumber(r.progression.ordinal),count:displayNumber(catalog.dungeon_sequence?.length||22)}))}</p><nav class="descent-links" aria-label="Dungeon sequence">${r.progression.previous_id?referenceCard(r.progression.previous_id):''}${r.progression.next_id?referenceCard(r.progression.next_id):''}</nav>`):''}${ability?block('Timing and damage','<p>Damage multipliers describe attack inputs; defenses affect final damage. Logical ticks last 0.5 seconds. Action-meter telegraphs depend on enemy speed.</p>'):''}${r.mechanics?block('Crafting operation',html`<p>${esc(r.mechanics.description)}</p>${r.mechanics.limitations?html`<p class="eligibility-note">${esc(r.mechanics.limitations)}</p>`:''}<a class="text-link" href="#crafting">Compare currency operations →</a>`):''}${links}</div></div>`;
   $('detail-body').querySelectorAll('.link-filter').forEach(input=>input.oninput=()=>input.closest('section').querySelectorAll('.reference-list a').forEach(a=>a.hidden=!a.textContent.toLowerCase().includes(input.value.toLowerCase())));document.title=`${r.name} — No Name Below`;if(!$('detail').open){returnFocus=document.activeElement;$('detail').showModal();}$('detail').scrollTop=0;watchCombatSprites();
 }
 function chapterShell(key,description){current=key;$('library').hidden=false;$('showcase').hidden=true;$('planner').hidden=true;$('collection-tools').hidden=true;$('cards').hidden=true;$('more').hidden=true;$('chapter').hidden=false;$('section-title').textContent=chapters[key][0];$('section-kicker').textContent=chapters[key][1];$('section-description').textContent=t(description);$('section-art').innerHTML='';markCollection(key);document.title=`${chapters[key][0]} — No Name Below`;}
@@ -336,7 +380,6 @@ function showMechanics(hash){
   }
   $('chapter').innerHTML=html`
     <div class="craft-links"><a href="${mechanicsLink(combatArticle.id)}">${esc(combatArticle.title)}</a></div>
-    <p class="mechanics-build">${rawEsc(t('Rules for {version} · Android {android} · iOS {ios}',mechanicsBuilds))}</p>
     <div class="guide-grid">
       ${mechanicsRules.map(({id,title,formulas,note})=>html`
         <article class="guide-block combat-rule" id="mechanic-${id}" tabindex="-1" aria-labelledby="combat-rule-${id}">
@@ -376,6 +419,7 @@ function showArmory(){
   $('chapter').hidden=true;$('cards').hidden=true;$('collection-tools').hidden=false;$('more').hidden=true;$('bestiary-feature').hidden=true;
   $('section-title').textContent=t('The Armory');$('section-kicker').textContent=categories.items[1];$('section-description').textContent=descriptions.items;$('section-art').innerHTML='';
   if(changed){$('search').value='';filtersForCategory();}
+  $('section-description').insertAdjacentHTML('beforeend',html` <a class="text-link" href="#uniques">Unique items</a>`);
   markCollection('items');document.title=t('Armory')+' — No Name Below';renderGallery();
 }
 function renderGallery(){
@@ -429,6 +473,7 @@ function route(){
   else if(activeRoute==='search')showSearch(hash);
   else if(activeRoute==='crafting')showCrafting();
   else if(activeRoute==='mechanics')showMechanics(hash);
+  else if(activeRoute==='scars')showScars();
   else {showCategory(activeRoute);if(activeRoute==='sets'){$('error').textContent=t('The legacy item-set collection has been retired. Browse equipment and compatible affixes in the current archive.');$('error').hidden=false;}}
   placeOrb(activeRoute);
   if(previous&&previous!==activeRoute){window.scrollTo({top:0,behavior:'instant'});window.NNBOrbMotion?.route(activeRoute);}
@@ -467,8 +512,8 @@ async function init(){
   for(const group of [categories,chapters])for(const labels of Object.values(group))for(let i=0;i<labels.length;i++)labels[i]=t(labels[i]);
   for(const key of Object.keys(descriptions))descriptions[key]=t(descriptions[key]);
   document.querySelector('.skip').onclick=e=>{e.preventDefault();if(!$('planner').hidden)$('plan-search').focus();else if(!$('home').hidden)document.querySelector('.hero-actions a').focus();else $('content').focus();};
-  const response=await fetch('data.json');if(!response.ok)throw Error('Could not load the game library.');catalog=window.NNBI18n.localizeCatalog(await response.json());if(catalog.schema_version!==2)throw Error('The archive data version is not supported.');catalog.records.filter(r=>r.category==='sets').forEach(r=>retiredSetIds.add(r.id));catalog.records=catalog.records.filter(r=>r.category!=='sets');byId=new Map(catalog.records.map(r=>[r.id,r]));catalog.records.forEach(r=>r.search=((r.englishSearch||'')+' '+r.name+' '+r.description+' '+JSON.stringify(r.data)+' '+Object.keys(stats(r)).map(k=>statText(k,0)[0]).join(' ')+' '+r.links.map(l=>byId.get(l.id)?.name||'').join(' ')).toLowerCase());plannerHelp();if(catalog.branding?.studio_logo?.url)[$('studio-logo'),$('home-studio-logo')].forEach(img=>img.src=catalog.branding.studio_logo.url);referenceReady();window.libraryPlanner=setupPlanner(catalog,byId,(key,value)=>statText(key,value,true),esc);
-  $('total').textContent=t('{count} linked entries',{count:displayNumber(catalog.records.length)});if($('snapshot-label'))$('snapshot-label').remove();const collections={...categories,crafting:chapters.crafting,mechanics:chapters.mechanics},navigation={Character:['classes','subclasses','skills','talents'],Equipment:['items','orbs','affixes','pools','crafting'],World:['enemies','dungeons','enemy_skills','mechanics']};$('categories').innerHTML=Object.entries(navigation).map(([group,keys])=>html`<div class="nav-group"><p class="nav-group-title">${group}</p>${keys.map(key=>html`<a href="#${key}" data-category="${key}"><span>${esc(collections[key][0])}</span>${catalog.counts[key]?html`<small>${catalog.counts[key]}</small>`:''}</a>`).join('')}</div>`).join('');$('collection-select').innerHTML=Object.entries(collections).map(([key,[label]])=>html`<option value="${key}">${esc(label)}</option>`).join('')+html('<option value="search">Search results</option>');$('collection-select').onchange=()=>location.hash=$('collection-select').value;
+  const response=await fetch('data.json');if(!response.ok)throw Error('Could not load the game library.');catalog=window.NNBI18n.localizeCatalog(await response.json());if(catalog.schema_version!==2)throw Error('The archive data version is not supported.');catalog.records.filter(r=>r.category==='sets').forEach(r=>retiredSetIds.add(r.id));catalog.records=catalog.records.filter(r=>r.category!=='sets');byId=new Map(catalog.records.map(r=>[r.id,r]));catalog.records.forEach(r=>r.search=((r.englishSearch||'')+' '+r.name+' '+r.description+' '+JSON.stringify(r.data)+' '+Object.keys(stats(r)).map(k=>statText(k,0)[0]).join(' ')+' '+r.links.map(l=>byId.get(l.id)?.name||'').join(' ')).toLowerCase());plannerHelp();if(catalog.branding?.studio_logo?.url)[$('studio-logo'),$('home-studio-logo')].forEach(img=>img.src=catalog.branding.studio_logo.url);referenceReady();window.libraryPlanner=setupPlanner(catalog,byId,statText,esc);
+  $('total').textContent=t('{count} linked entries',{count:displayNumber(catalog.records.length)});if($('snapshot-label'))$('snapshot-label').remove();const collections={...categories,crafting:chapters.crafting,mechanics:chapters.mechanics,scars:chapters.scars},navigation={Character:['classes','subclasses','skills','talents'],Equipment:['items','uniques','orbs','affixes','pools','crafting'],World:['enemies','dungeons','scars','enemy_skills','mechanics']};$('categories').innerHTML=Object.entries(navigation).map(([group,keys])=>html`<div class="nav-group"><p class="nav-group-title">${group}</p>${keys.map(key=>html`<a href="#${key}" data-category="${key}"><span>${esc(collections[key][0])}</span>${catalog.counts[key]?html`<small>${catalog.counts[key]}</small>`:''}</a>`).join('')}</div>`).join('');$('collection-select').innerHTML=Object.entries(collections).map(([key,[label]])=>html`<option value="${key}">${esc(label)}</option>`).join('')+html('<option value="search">Search results</option>');$('collection-select').onchange=()=>location.hash=$('collection-select').value;
   $('global-search').onsubmit=e=>{e.preventDefault();location.hash='search?'+new URLSearchParams({q:$('global-query').value.trim()});};$('nav-toggle').onclick=()=>{const open=$('main-nav').classList.toggle('is-open');$('nav-toggle').setAttribute('aria-expanded',String(open));};filtersForCategory();const query=new URLSearchParams(location.search);if([...$('kind').options].some(o=>o.value===query.get('galleryType')))$('kind').value=query.get('galleryType');$('filters').addEventListener('submit',e=>e.preventDefault());['search','tier','kind','skill-category'].forEach(id=>$(id).addEventListener(id==='search'?'input':'change',()=>{limit=48;renderCards();}));$('filters').addEventListener('reset',()=>setTimeout(()=>{limit=48;renderCards();},0));$('more').onclick=()=>{limit+=48;renderCards();};$('close-detail').onclick=()=>location.hash=detailReturn;$('detail').addEventListener('cancel',e=>{e.preventDefault();$('close-detail').click();});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('main-nav').classList.remove('is-open');$('nav-toggle').setAttribute('aria-expanded','false');}});
   $('chapter').addEventListener('click',event=>{

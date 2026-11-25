@@ -1,7 +1,7 @@
 {
   "source": "engine/idle-game-engine/assets/talent_tree/talent_tree_4096.png",
-  "source_sha256": "599891d85cd9d017154a60ad9674ee10ce4ac2ec7f111dafb06f28a28a16aa6e",
-  "coordinates_sha256": "1ff03d69817c37e2a04868842733ad28ba3731a9e3d191c51716e1990aba3b4a",
+  "source_sha256": "48778ca50dc747b003922ac4cd3990480f4319dcdf2d5bb596a8cd707a0b0f93",
+  "coordinates_sha256": "1e5f1b1ef88079904fe6baa8f7473ff532663101b95f217c381912f38058707b",
   "node_count": 744,
   "coordinate_base": 2048,
   "encoding": {
@@ -15,8 +15,8 @@
       "width": 1024,
       "height": 1024,
       "quality": 84,
-      "bytes": 88468,
-      "sha256": "45293cbe6f3fe14589da9a78387354bb8abb414aabb01040aaa546f62acd5bb3",
+      "bytes": 88572,
+      "sha256": "010fb0e8dcc49da1ab96de9f459c886d94721ce206b4f344f7dfe52a5ee46d6b",
       "geometry": "entire square bake; no crop, rotation or coordinate change",
       "pixel_identity": "lossy WebP derivative of the verified native image"
     },
@@ -25,8 +25,8 @@
       "width": 4096,
       "height": 4096,
       "quality": 90,
-      "bytes": 3859114,
-      "sha256": "044293a95cf624718abff735fe878fb1dd912660992f4362674c6fef82121150",
+      "bytes": 3854848,
+      "sha256": "06642d5678d3333bade83ba745f32ef41cbb22182bbfc6d0ff4571ae9a867774",
       "geometry": "entire square bake; no crop, rotation or coordinate change",
       "pixel_identity": "lossy WebP derivative of the verified native image"
     }

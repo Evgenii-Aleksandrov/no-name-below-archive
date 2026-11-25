@@ -231,7 +231,7 @@
       "y": 1131.1,
       "r": 7.7,
       "kind": "minor",
-      "name": "Arcane Pulse",
+      "name": "Magic Pulse",
       "cluster": null
     },
     "hw_outer_east_12": {
@@ -1071,7 +1071,7 @@
       "y": 1189.3,
       "r": 11.5,
       "kind": "notable",
-      "name": "Holy Ward",
+      "name": "Shadow Ward",
       "cluster": 73
     },
     "cl_precision_crit_r0": {
@@ -1095,7 +1095,7 @@
       "y": 1110.8,
       "r": 11.5,
       "kind": "notable",
-      "name": "Sanctified Resist",
+      "name": "Nightward",
       "cluster": 73
     },
     "cl_precision_crit_r3": {
@@ -1119,7 +1119,7 @@
       "y": 1208,
       "r": 11.5,
       "kind": "notable",
-      "name": "Absolute Ward",
+      "name": "Rimeward",
       "cluster": 61
     },
     "cl_blade_master_r0": {
@@ -1135,7 +1135,7 @@
       "y": 1244.2,
       "r": 7.7,
       "kind": "minor",
-      "name": "Ambush",
+      "name": "Ember Ward",
       "cluster": 61
     },
     "cl_blade_master_r2": {
@@ -1143,7 +1143,7 @@
       "y": 1218,
       "r": 11.5,
       "kind": "notable",
-      "name": "Ironbound Spirit",
+      "name": "Stormbound",
       "cluster": 61
     },
     "cl_blade_master_r3": {
@@ -1455,7 +1455,7 @@
       "y": 1143.1,
       "r": 11.5,
       "kind": "notable",
-      "name": "Prismatic Cap",
+      "name": "Warding Mantle",
       "cluster": 63
     },
     "cl_aoe_mastery_r0": {
@@ -1479,7 +1479,7 @@
       "y": 1022.1,
       "r": 11.5,
       "kind": "notable",
-      "name": "Arcane Flow",
+      "name": "Magic Flow",
       "cluster": 31
     },
     "cl_aoe_mastery_r3": {
@@ -1727,7 +1727,7 @@
       "y": 455.3,
       "r": 11.5,
       "kind": "notable",
-      "name": "Shadow Ward",
+      "name": "Holy Ward",
       "cluster": 18
     },
     "cl_auto_7_r0": {
@@ -1751,7 +1751,7 @@
       "y": 472.2,
       "r": 11.5,
       "kind": "notable",
-      "name": "Nightward",
+      "name": "Sanctified Resist",
       "cluster": 18
     },
     "cl_auto_7_r3": {
@@ -2159,7 +2159,7 @@
       "y": 1621.1,
       "r": 11.5,
       "kind": "notable",
-      "name": "Arcane Power",
+      "name": "Magic Power",
       "cluster": 49
     },
     "cl_auto_18_r0": {
@@ -2231,7 +2231,7 @@
       "y": 1512.5,
       "r": 11.5,
       "kind": "notable",
-      "name": "Self-Command",
+      "name": "Elemental Focus",
       "cluster": 47
     },
     "cl_auto_20_r0": {
@@ -2519,7 +2519,7 @@
       "y": 1133.4,
       "r": 7.7,
       "kind": "minor",
-      "name": "Melee Master",
+      "name": "Projectile Training",
       "cluster": 8
     },
     "cl_auto_27_r1": {
@@ -2703,7 +2703,7 @@
       "y": 1532.1,
       "r": 11.5,
       "kind": "notable",
-      "name": "Arcane Rod",
+      "name": "Magic Rod",
       "cluster": 40
     },
     "cl_auto_32_r0": {
@@ -2895,7 +2895,7 @@
       "y": 938.6,
       "r": 11.5,
       "kind": "notable",
-      "name": "Arcane Haste",
+      "name": "Magic Haste",
       "cluster": 9
     },
     "cl_auto_37_r0": {
@@ -3415,7 +3415,7 @@
       "y": 1337,
       "r": 7.7,
       "kind": "minor",
-      "name": "Voltage",
+      "name": "Rime Lining",
       "cluster": 55
     },
     "cl_auto_50_r2": {
@@ -3631,7 +3631,7 @@
       "y": 1149.7,
       "r": 11.5,
       "kind": "notable",
-      "name": "Arcane Shield",
+      "name": "Magic Shield",
       "cluster": 59
     },
     "cl_auto_56_r0": {
@@ -3695,7 +3695,7 @@
       "y": 1089.8,
       "r": 11.5,
       "kind": "notable",
-      "name": "Arcane Might",
+      "name": "Magic Might",
       "cluster": 37
     },
     "cl_auto_57_r3": {
@@ -3783,7 +3783,7 @@
       "y": 879.5,
       "r": 11.5,
       "kind": "notable",
-      "name": "Elemental Ward",
+      "name": "Warding Mantle",
       "cluster": 25
     },
     "cl_auto_60_r0": {
@@ -3943,7 +3943,7 @@
       "y": 599.1,
       "r": 11.5,
       "kind": "notable",
-      "name": "All-Element Focus",
+      "name": "Sacred Focus",
       "cluster": 19
     },
     "cl_auto_64_r0": {
@@ -4207,7 +4207,7 @@
       "y": 1421.5,
       "r": 11.5,
       "kind": "notable",
-      "name": "Prismatic Cap",
+      "name": "Lightning Rod",
       "cluster": 46
     },
     "cl_auto_71_r0": {
@@ -4559,7 +4559,7 @@
       "y": 1107.9,
       "r": 11.5,
       "kind": "notable",
-      "name": "Quick Step",
+      "name": "Toxin-Hardened",
       "cluster": 72
     },
     "cl_auto_80_r0": {
@@ -4639,7 +4639,7 @@
       "y": 1219.9,
       "r": 11.5,
       "kind": "notable",
-      "name": "Elemental Surge",
+      "name": "Dark Focus",
       "cluster": 56
     },
     "cl_auto_82_r0": {
@@ -4727,7 +4727,7 @@
       "y": 1170,
       "r": 7.7,
       "kind": "minor",
-      "name": "Arcane Focus",
+      "name": "Magic Focus",
       "cluster": 62
     },
     "cl_auto_84_r2": {
@@ -4751,7 +4751,7 @@
       "y": 519.1,
       "r": 11.5,
       "kind": "notable",
-      "name": "Convergent Power",
+      "name": "Mystic Focus",
       "cluster": 20
     },
     "cl_auto_85_r0": {
@@ -4999,7 +4999,7 @@
       "y": 1050.2,
       "r": 7.7,
       "kind": "minor",
-      "name": "Arcane Pulse",
+      "name": "Magic Pulse",
       "cluster": 35
     },
     "cl_auto_91_r1": {
@@ -5055,7 +5055,7 @@
       "y": 927.4,
       "r": 7.7,
       "kind": "minor",
-      "name": "Arcane Pulse",
+      "name": "Magic Pulse",
       "cluster": 12
     },
     "cl_auto_93_notable": {
@@ -5559,7 +5559,7 @@
       "y": 1493.5,
       "r": 11.5,
       "kind": "notable",
-      "name": "Absolute Ward",
+      "name": "Grounding Seal",
       "cluster": 46
     },
     "cl_auto_106_r0": {
@@ -5671,7 +5671,7 @@
       "y": 319,
       "r": 7.7,
       "kind": "minor",
-      "name": "Path to Resolute Technique",
+      "name": "Path to Certainty",
       "cluster": null
     },
     "ks_0": {
@@ -5687,7 +5687,7 @@
       "y": 287.2,
       "r": 7.7,
       "kind": "minor",
-      "name": "Path to Iron Fortress",
+      "name": "Path to Stubbornness",
       "cluster": null
     },
     "ks_1": {
@@ -5703,7 +5703,7 @@
       "y": 778.4,
       "r": 7.7,
       "kind": "minor",
-      "name": "Path to Berserker Rage",
+      "name": "Path to Dependence",
       "cluster": null
     },
     "ks_2": {
@@ -5719,7 +5719,7 @@
       "y": 1684.9,
       "r": 7.7,
       "kind": "minor",
-      "name": "Path to Avatar of Fire",
+      "name": "Path to Fear of Pain",
       "cluster": null
     },
     "ks_3": {
@@ -5735,7 +5735,7 @@
       "y": 1218.1,
       "r": 7.7,
       "kind": "minor",
-      "name": "Path to Absolute Zero",
+      "name": "Path to Detachment",
       "cluster": null
     },
     "ks_4": {
@@ -5751,7 +5751,7 @@
       "y": 1781.5,
       "r": 7.7,
       "kind": "minor",
-      "name": "Path to Storm Conduit",
+      "name": "Path to Suppressed Anger",
       "cluster": null
     },
     "ks_5": {
@@ -5767,7 +5767,7 @@
       "y": 1673.6,
       "r": 7.7,
       "kind": "minor",
-      "name": "Path to Assassinate",
+      "name": "Path to Resentment",
       "cluster": null
     },
     "ks_6": {
@@ -5783,7 +5783,7 @@
       "y": 1792.8,
       "r": 7.7,
       "kind": "minor",
-      "name": "Path to Perfect Agility",
+      "name": "Path to Alarm",
       "cluster": null
     },
     "ks_7": {
@@ -5799,7 +5799,7 @@
       "y": 1259.2,
       "r": 7.7,
       "kind": "minor",
-      "name": "Path to Master Toxicologist",
+      "name": "Path to Bitterness",
       "cluster": null
     },
     "ks_8": {
@@ -5815,7 +5815,7 @@
       "y": 348.8,
       "r": 7.7,
       "kind": "minor",
-      "name": "Path to Divine Shield",
+      "name": "Path to Compromise",
       "cluster": null
     },
     "ks_9": {
@@ -5831,7 +5831,7 @@
       "y": 298.5,
       "r": 7.7,
       "kind": "minor",
-      "name": "Path to Righteous Fire",
+      "name": "Path to Vigilance",
       "cluster": null
     },
     "ks_10": {
@@ -5847,7 +5847,7 @@
       "y": 756.9,
       "r": 7.7,
       "kind": "minor",
-      "name": "Path to Shadow Master",
+      "name": "Path to Resignation",
       "cluster": null
     },
     "ks_11": {
@@ -5863,7 +5863,7 @@
       "y": 1003,
       "r": 7.7,
       "kind": "minor",
-      "name": "Path to Blood Magic",
+      "name": "Path to Impatience",
       "cluster": null
     },
     "ks_12": {
@@ -5879,7 +5879,7 @@
       "y": 1782,
       "r": 7.7,
       "kind": "minor",
-      "name": "Path to Vaal Pact",
+      "name": "Path to Self-Neglect",
       "cluster": null
     },
     "ks_13": {
@@ -5895,7 +5895,7 @@
       "y": 271,
       "r": 7.7,
       "kind": "minor",
-      "name": "Path to Pain Attunement",
+      "name": "Path to Small Cruelties",
       "cluster": null
     },
     "ks_14": {
@@ -5911,7 +5911,7 @@
       "y": 1003.7,
       "r": 7.7,
       "kind": "minor",
-      "name": "Path to Mind Over Matter",
+      "name": "Path to Desperation",
       "cluster": null
     },
     "ks_15": {
@@ -5935,7 +5935,7 @@
       "y": 1755.1,
       "r": 7.7,
       "kind": "minor",
-      "name": "Path to Iron Reflexes",
+      "name": "Path to Defiance",
       "cluster": null
     },
     "ks_17": {
@@ -12384,7 +12384,7 @@
         "cl_auto_60_r2",
         "cl_auto_60_r3"
       ],
-      "theme": "all_resist",
+      "theme": "poison_magic_resist",
       "art": {
         "sheet": "reliefs_elemental",
         "cell": 12
@@ -12480,10 +12480,10 @@
         "cl_auto_7_r2",
         "cl_auto_7_r3"
       ],
-      "theme": "dark_resist",
+      "theme": "holy_resist",
       "art": {
         "sheet": "reliefs_elemental",
-        "cell": 11
+        "cell": 10
       }
     },
     {
@@ -12507,8 +12507,8 @@
       ],
       "theme": "elemental_all",
       "art": {
-        "sheet": "reliefs_specialties",
-        "cell": 3
+        "sheet": "reliefs_arcane",
+        "cell": 14
       }
     },
     {
@@ -12618,10 +12618,10 @@
         "cl_precision_crit_r3",
         "cl_precision_crit_r4"
       ],
-      "theme": "holy_resist",
+      "theme": "dark_resist",
       "art": {
         "sheet": "reliefs_elemental",
-        "cell": 10
+        "cell": 11
       }
     },
     {
@@ -12642,8 +12642,8 @@
       ],
       "theme": "elemental_resist",
       "art": {
-        "sheet": "reliefs_elemental",
-        "cell": 13
+        "sheet": "elemental_wards",
+        "cell": 0
       }
     },
     {
@@ -12820,10 +12820,10 @@
         "cl_aoe_mastery_r1",
         "cl_aoe_mastery_r3"
       ],
-      "theme": "fire_resist",
+      "theme": "all_resist",
       "art": {
-        "sheet": "reliefs_elemental",
-        "cell": 8
+        "sheet": "cluster_reliefs",
+        "cell": 11
       }
     },
     {
@@ -12843,10 +12843,11 @@
         "cl_auto_78_r2",
         "cl_auto_78_r3"
       ],
-      "theme": "cast_speed",
+      "theme": "mana_recovery",
       "art": {
-        "sheet": "reliefs_arcane",
-        "cell": 4
+        "sheet": "november_specializations",
+        "cell": 4,
+        "thin": true
       }
     },
     {
@@ -12977,7 +12978,7 @@
         "cl_auto_6_r2",
         "cl_auto_6_r3"
       ],
-      "theme": "magic_base",
+      "theme": "spell",
       "art": {
         "sheet": "reliefs_arcane",
         "cell": 0
@@ -12999,7 +13000,7 @@
         "cl_auto_8_r2",
         "cl_auto_8_r3"
       ],
-      "theme": "magic_base",
+      "theme": "arcane_damage",
       "art": {
         "sheet": "reliefs_arcane",
         "cell": 1
@@ -13223,10 +13224,10 @@
         "cl_auto_18_r2",
         "cl_auto_18_r3"
       ],
-      "theme": "magic_base",
+      "theme": "spell",
       "art": {
         "sheet": "reliefs_arcane",
-        "cell": 2
+        "cell": 6
       }
     },
     {
@@ -13625,10 +13626,10 @@
         "cl_auto_38_r2",
         "cl_auto_38_r3"
       ],
-      "theme": "minion",
+      "theme": "shadow_ward",
       "art": {
-        "sheet": "reliefs_vitality",
-        "cell": 13
+        "sheet": "november_specializations",
+        "cell": 2
       }
     },
     {
@@ -13761,8 +13762,8 @@
       ],
       "theme": "elemental_resist",
       "art": {
-        "sheet": "reliefs_specialties",
-        "cell": 10,
+        "sheet": "elemental_wards",
+        "cell": 1,
         "thin": true
       }
     },
@@ -14049,7 +14050,7 @@
         "cl_auto_57_r2",
         "cl_auto_57_r3"
       ],
-      "theme": "magic_base",
+      "theme": "arcane_damage",
       "art": {
         "sheet": "reliefs_arcane",
         "cell": 3
@@ -14205,10 +14206,10 @@
         "cl_auto_64_r2",
         "cl_auto_64_r3"
       ],
-      "theme": "elemental_all",
+      "theme": "mystic_damage",
       "art": {
-        "sheet": "reliefs_specialties",
-        "cell": 12,
+        "sheet": "november_specializations",
+        "cell": 0,
         "thin": true
       }
     },
@@ -14474,10 +14475,10 @@
         "cl_auto_76_r2",
         "cl_auto_76_r3"
       ],
-      "theme": "cast_speed",
+      "theme": "mana_pool",
       "art": {
-        "sheet": "reliefs_arcane",
-        "cell": 5
+        "sheet": "november_specializations",
+        "cell": 3
       }
     },
     {
@@ -14585,10 +14586,10 @@
         "cl_auto_82_r2",
         "cl_auto_82_r3"
       ],
-      "theme": "elemental_all",
+      "theme": "dark",
       "art": {
         "sheet": "reliefs_specialties",
-        "cell": 13,
+        "cell": 14,
         "thin": true
       }
     },
@@ -14652,10 +14653,10 @@
         "cl_auto_85_r2",
         "cl_auto_85_r3"
       ],
-      "theme": "elemental_all",
+      "theme": "mystic_damage",
       "art": {
-        "sheet": "reliefs_arcane",
-        "cell": 14
+        "sheet": "november_specializations",
+        "cell": 1
       }
     },
     {
@@ -14785,10 +14786,10 @@
         "cl_auto_91_r1",
         "cl_auto_91_r2"
       ],
-      "theme": "cast_speed",
+      "theme": "mana_pool",
       "art": {
-        "sheet": "reliefs_thin_variants",
-        "cell": 10,
+        "sheet": "november_specializations",
+        "cell": 5,
         "thin": true
       }
     },
@@ -14874,10 +14875,10 @@
         "cl_auto_97_r2",
         "cl_auto_97_r3"
       ],
-      "theme": "crit_damage",
+      "theme": "arcane_damage",
       "art": {
-        "sheet": "reliefs_agility",
-        "cell": 15
+        "sheet": "reliefs_arcane",
+        "cell": 2
       }
     },
     {
@@ -14962,11 +14963,10 @@
         "cl_auto_103_r2",
         "cl_auto_103_r3"
       ],
-      "theme": "minion",
+      "theme": "dark",
       "art": {
-        "sheet": "reliefs_specialties",
-        "cell": 14,
-        "thin": true
+        "sheet": "cluster_reliefs",
+        "cell": 10
       }
     },
     {
