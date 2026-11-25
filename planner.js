@@ -9,7 +9,8 @@ function setupPlanner(catalog, byId, statText, esc) {
   let pendingShareHash='',opening=false,imageFrame=0,viewWidth=0,viewHeight=0,dpr=1,atlas=null,atlasPromise=null,artwork=null,detailPromise=null,pendingView=null;
   const ART='engine/idle-game-engine/assets/talent_tree/', WEB_ART='assets/';
   const pointers=new Map();let pinch=null,popupOpen=false,pressed=null;
-  const COORDINATE_SHA='471beb22fc1969be8c4ff1a0688bcc60d3952585974ff093e9623af54bfb2de3';
+  const COORDINATE_SHA='1e5f1b1ef88079904fe6baa8f7473ff532663101b95f217c381912f38058707b';
+  const atlasVersion='?v='+COORDINATE_SHA;
   const ownedFetches=new Set(),events=new AbortController(),ignoredPointers=new Set();
   let active=false,disposed=false,activation=0,coordinatesPromise=null,previewPromise=null,viewIntent={kind:'fit',pending:true};
   function current(ticket){return !disposed&&active&&ticket===activation&&!el('planner').hidden&&!el('detail').open;}
@@ -44,7 +45,7 @@ function setupPlanner(catalog, byId, statText, esc) {
   }
   function loadCoordinates(){
     if(atlas)return Promise.resolve(atlas);
-    if(!coordinatesPromise)coordinatesPromise=ownedBytes(ART+'talent_tree_coords.json').then(async bytes=>{
+    if(!coordinatesPromise)coordinatesPromise=ownedBytes(ART+'talent_tree_coords.json'+atlasVersion).then(async bytes=>{
       const data=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));validateCoordinates(data);
       const digest=await crypto.subtle.digest('SHA-256',bytes),hash=Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('');
       if(hash!==COORDINATE_SHA)throw Error('Stale atlas coordinates');
@@ -54,12 +55,12 @@ function setupPlanner(catalog, byId, statText, esc) {
   }
   function loadDetail(){
     if(artwork?.naturalWidth===4096)return Promise.resolve(true);
-    if(!detailPromise)detailPromise=loadBitmap(WEB_ART+'talent-atlas-detail.webp').then(image=>{artwork=image;return true;}).catch(()=>false).finally(()=>{detailPromise=null;});
+    if(!detailPromise)detailPromise=loadBitmap(WEB_ART+'talent-atlas-detail.webp'+atlasVersion).then(image=>{artwork=image;return true;}).catch(()=>false).finally(()=>{detailPromise=null;});
     return detailPromise;
   }
   function loadPreview(){
     if(artwork)return Promise.resolve();
-    if(!previewPromise)previewPromise=loadBitmap(WEB_ART+'talent-atlas-preview.webp').then(image=>{if(!artwork||artwork.naturalWidth<image.naturalWidth)artwork=image;}).catch(async error=>{if(error.name==='AbortError')throw error;if(!await loadDetail())throw Error('Atlas images unavailable');}).finally(()=>{previewPromise=null;});
+    if(!previewPromise)previewPromise=loadBitmap(WEB_ART+'talent-atlas-preview.webp'+atlasVersion).then(image=>{if(!artwork||artwork.naturalWidth<image.naturalWidth)artwork=image;}).catch(async error=>{if(error.name==='AbortError')throw error;if(!await loadDetail())throw Error('Atlas images unavailable');}).finally(()=>{previewPromise=null;});
     return previewPromise;
   }
   function loadImages(){
